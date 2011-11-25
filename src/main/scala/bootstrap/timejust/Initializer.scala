@@ -1,4 +1,4 @@
-package com.timejust.service
+package bootstrap.timejust
 
 import akka.util.AkkaLoader
 import akka.actor.BootableActorLoaderService
