@@ -17,10 +17,6 @@ class ServiceProject(info: ProjectInfo) extends DefaultWebProject(info) with Akk
     "net.liftweb" % "lift-json_2.9.1" % "2.4-M5" % "provided",
     "ch.qos.logback" % "logback-classic" % "0.9.28" % "runtime",
     "com.ning" % "async-http-client" % "1.6.4" % "provided"
-    // "cc.spray" % "spray-client" % "0.8.0-RC3" % "provided",
-    // "cc.spray" % "spray-base" % "0.8.0-RC3" % "provided"
-    // "org.slf4j" % "slf4j-api" % "1.5.10" % "provided"
-    // "cc.spray.can" % "spray-can" % "0.9.1" % "provided"
   ) ++ super.libraryDependencies        
   
   override def jettyPort = 9000
