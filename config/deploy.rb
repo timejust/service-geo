@@ -26,6 +26,7 @@ ssh_options[:forward_agent]    = true
 
 # Before everything else, build the application with sbt.
 after "deploy:update_code",  "sbt:build"
+after "deploy:symlink",      "deploy:start"
 after "deploy",              "deploy:cleanup"
 
   
