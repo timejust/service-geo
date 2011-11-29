@@ -21,12 +21,12 @@ set :copy_exclude,            [".DS_Store", ".git"]
 default_run_options[:pty]      = true
 ssh_options[:forward_agent]    = true
 
-set :whenever_command,        "bundle exec whenever"
-set :whenever_environment,    defer { rails_env }
+#set :whenever_command,        "bundle exec whenever"
+#set :whenever_environment,    defer { rails_env }
 
 # Before everything else, build the application with sbt.
 after "deploy:update_code",  "sbt:build"
-#after "deploy",              "deploy:cleanup"
+after "deploy",              "deploy:cleanup"
 
   
 namespace :sbt do 
