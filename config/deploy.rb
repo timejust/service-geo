@@ -28,7 +28,8 @@ ssh_options[:forward_agent]    = true
 after "deploy:update_code",  "sbt:build"
 after "deploy:symlink",      "deploy:start"
 after "deploy",              "deploy:cleanup"
-
+after "deploy:cleanup",      "chown:start"
+  
   
 namespace :sbt do 
   desc "build project with sbt"
@@ -42,11 +43,18 @@ end
 namespace :deploy do
   desc "deploy newly build war file to jetty webapps path"
   task :start do
-    run "sudo ln -sf #{release_path}/target/scala_#{scala_version}/#{war_path} #{jetty_home}/#{application}.war"
+    run "sudo ln -sf #{release_path}/target/scala_#{scala_version}/#{war_file} #{jetty_home}/#{application}.war"
   end
   
   desc "restart jetty"
   task :restart do
     run "sudo #{jetty_ctrl} restart"
+  end
+end
+
+namespace :chown do
+  desc "change ownership of some directories"
+  task :start do
+    run "sudo chown -R deploy:deploy #{release_path}"
   end
 end
