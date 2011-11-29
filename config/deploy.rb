@@ -32,7 +32,7 @@ after  "deploy",              "deploy:cleanup"
 namespace :sbt do 
   desc "build project with sbt"
   task :build do
-    run "cd #{deploy_to}/current && sbt clean update package"
+    run "cd #{deploy_to}/current && sudo sbt clean update package"
   end
 end
 
