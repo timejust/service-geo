@@ -1,5 +1,5 @@
-require 'bundler/capistrano'
-require 'whenever/capistrano'
+#require 'bundler/capistrano'
+#require 'whenever/capistrano'
 require 'capistrano/ext/multistage'
 require 'capistrano-notification'
 
