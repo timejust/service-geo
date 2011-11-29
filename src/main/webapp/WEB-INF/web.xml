@@ -1,7 +1,7 @@
 <web-app>
 
   <listener>
-    <listener-class>bootstrap.timejust.Initializer</listener-class>
+    <listener-class>com.timejust.geo.bootstrap.Initializer</listener-class>
   </listener>
 
   <servlet>
