@@ -13,10 +13,11 @@ class ServiceProject(info: ProjectInfo) extends DefaultWebProject(info) with Akk
   
   override def libraryDependencies = Set(
     "org.eclipse.jetty" % "jetty-webapp" % "8.0.0.RC0" % "provided",
-    "org.eclipse.jetty" % "jetty-servlet" % "8.0.0.RC0" % "provided",
-    "net.liftweb" % "lift-json_2.9.1" % "2.4-M5" % "provided",
+    // "org.eclipse.jetty" % "jetty-servlet" % "8.0.0.RC0" % "provided",
+    "org.mortbay.jetty" % "servlet-api" % "3.0.20100224" % "provided",
+    "net.liftweb" % "lift-json_2.9.1" % "2.4-M5" % "compile",
     "ch.qos.logback" % "logback-classic" % "0.9.28" % "runtime",
-    "com.ning" % "async-http-client" % "1.6.4" % "provided"
+    "com.ning" % "async-http-client" % "1.6.4" % "compile"
   ) ++ super.libraryDependencies        
   
   override def jettyPort = 9000

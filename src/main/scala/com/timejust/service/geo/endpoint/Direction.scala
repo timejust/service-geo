@@ -10,13 +10,14 @@ import net.liftweb.json.JsonDSL._
 import com.timejust.service.geo.actor._
 import com.timejust.service.geo.actor.GeocodingEngine._
 import com.timejust.service.geo.lib.timejust._
+import javax.ws.rs.core.MediaType  
 
 
 /**
  * End point class for geo direction api
  */
 class Direction extends Actor with Endpoint {
-  final val version = "/v1/"
+  final val version = "/service-geo/v1/"
   final val geo = "geo/"
   final val directionActor = version + geo + "direction"
   
@@ -24,7 +25,7 @@ class Direction extends Actor with Endpoint {
   self.dispatcher = Endpoint.Dispatcher
       
   // Create the recognition actors
-  val directions = Vector.fill(4)(Actor.actorOf[DirectionActor].start())
+  val directions = Vector.fill(4)(Actor.actorOf(new DirectionActor).start())
 
   // Wrap them with a load-balancing router
   val direction = Routing.loadBalancerActor(CyclicIterator(directions)).start()
@@ -75,8 +76,7 @@ class Direction extends Actor with Endpoint {
  *    {"id":"2","result":{"status":"invalid request"}}]
  */
 class DirectionActor extends Actor {
-  import javax.ws.rs.core.MediaType  
-  implicit val formats = DefaultFormats
+  // implicit val formats = DefaultFormats
   
   def receive = {    
     // Handle get request

@@ -10,13 +10,14 @@ import net.liftweb.json.JsonDSL._
 import com.timejust.service.geo.actor._
 import com.timejust.service.geo.actor.GeocodingEngine._
 import com.timejust.service.geo.lib.timejust._
-
+import javax.ws.rs.core.MediaType  
+  
 
 /**
  * End point class for geo recognition api
  */
 class Recognition extends Actor with Endpoint {
-  final val version = "/v1/"
+  final val version = "/service-geo/v1/"
   final val geo = "geo/"
   final val recognitionActor = version + geo + "recognition"
   
@@ -24,7 +25,7 @@ class Recognition extends Actor with Endpoint {
   self.dispatcher = Endpoint.Dispatcher
       
   // Create the recognition actors
-  val recognitions = Vector.fill(4)(Actor.actorOf[RecognitionActor].start())
+  val recognitions = Vector.fill(4)(Actor.actorOf(new RecognitionActor).start())
 
   // Wrap them with a load-balancing router
   val recognition = Routing.loadBalancerActor(CyclicIterator(recognitions)).start()
@@ -76,8 +77,7 @@ class Recognition extends Actor with Endpoint {
  *    {"id":"2","result":{"status":"invalid request"}}]
  */
 class RecognitionActor extends Actor {
-  import javax.ws.rs.core.MediaType  
-  implicit val formats = DefaultFormats
+  // implicit val formats = DefaultFormats
   
   def receive = {    
     // Handle get request
