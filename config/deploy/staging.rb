@@ -7,7 +7,7 @@ set   :default_environment, {"RAILS_ENV" => rails_env}
 set   :deploy_to,           "/opt/timejust/service-geo"
 set   :jetty_home,          "/opt/jetty"
 set   :jetty_ctrl,          "/etc/init.d/jetty"
-set   :war_path,            "#{deploy_to}/current/target/scala_#{scala_version}/#{application}_#{scala_version}-{app_versuib}.war"
+set   :war_file,            "#{application}_#{scala_version}-{app_version}.war"
 
 role  :app,                 "service-staging.timejust.com"
 role  :web,                 "service-staging.timejust.com"
