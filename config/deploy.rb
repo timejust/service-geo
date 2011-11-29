@@ -31,7 +31,7 @@ after  "deploy",              "deploy:cleanup"
   
 namespace :sbt do 
   desc "build project with sbt"
-  task: build do
+  task :build do
     run "cd #{deploy_to}/current && sbt clean update package"
   end
 end
@@ -40,12 +40,12 @@ end
 # instead of copying file.
 namespace :deploy do
   desc "deploy newly build war file to jetty webapps path"
-  task: start do
+  task :start do
     run "sudo ln -sf #{war_path} #{jetty_home}/#{application}.war"
   end
   
   desc "restart jetty"
-  task: restart do
+  task :restart do
     run "sudo #{jetty_ctrl} restart"
   end
 end
