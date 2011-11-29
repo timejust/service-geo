@@ -7,9 +7,9 @@ import akka.event.EventHandler
 import akka.routing.CyclicIterator
 import akka.routing.Routing
 import akka.routing.Routing.Broadcast
-import bootstrap.timejust.LowlevelWorkers
 import com.ning.http.client._
 import com.ning.http.client.AsyncHandler._
+import com.timejust.service.geo.bootstrap.LowlevelWorkers
 import com.timejust.service.geo.lib.timejust._
 import com.timejust.service.geo.lib.timejust.AsyncHttpClientPool._
 import net.liftweb.json._
