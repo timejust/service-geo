@@ -11,7 +11,7 @@ import akka.routing.CyclicIterator
 import akka.routing.Routing
 import com.ning.http.client._
 import com.ning.http.client.AsyncHandler._
-import com.timejust.service.geo.bootstrap.Worker
+import com.timejust.bootstrap.geo.Worker
 import com.timejust.service.geo.lib.google._
 import com.timejust.service.geo.lib.google.Geocoding._
 import com.timejust.service.geo.lib.google.Places._
