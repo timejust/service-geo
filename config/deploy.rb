@@ -43,7 +43,7 @@ end
 namespace :deploy do
   desc "deploy newly build war file to jetty webapps path"
   task :start do
-    run "sudo ln -sf #{release_path}/target/scala_#{scala_version}/#{war_file} #{jetty_home}/webapps/#{application}.war"
+    run "cp #{release_path}/target/scala_#{scala_version}/#{war_file} #{jetty_home}/webapps/#{application}.war"
   end
   
   desc "restart jetty"
