@@ -6,7 +6,9 @@ import akka.event._
 import akka.routing.CyclicIterator
 import akka.routing.Routing
 import net.liftweb.json._
+import net.liftweb.json.JsonAST
 import net.liftweb.json.JsonDSL._
+import net.liftweb.json.Printer._
 import com.timejust.service.geo.actor._
 import com.timejust.service.geo.actor.GeocodingEngine._
 import com.timejust.service.geo.lib.timejust._
@@ -69,52 +71,78 @@ class Recognition extends Actor with Endpoint {
 /**
  * @brief GeoRecognition service handler to respond to some HTTP requests
  *
+ * Sample: 
+ * - Single request
+ *  http://service.timejust.com/v1/geo/recognition?
+ *    id=1&geo=8 rue cauchy&src=192.168.0.21
+ *
+ * - Multiple request
  * request format json -> 
- *   [{"id":"1","geo":"rue cauchy","src":"192.168.0.21"},
- *    {"id":"2","geo":"26 rue longchamp","src":"192.168.0.21"}]
- * response format json -> 
- *   [{"id":"1","result":{"status":"ok","geo":["rue cauchy"]}},
- *    {"id":"2","result":{"status":"invalid request"}}]
+ *   [{"id":"1",
+ *     "geo":"rue cauchy",
+ *     "src":"192.168.0.21"},
+ *    {"id":"2",
+ *     "geo":"26 rue longchamp",
+ *     "src":"192.168.0.21"}]
+ *
+ * - Response -> 
+ *   [{"id":"1",
+ *     "result":{"status":"ok",
+ *               "geo":["rue cauchy"]}},
+ *    {"id":"2",
+ *     "result":{"status":"invalid request"}}
+ *   ]
  */
 class RecognitionActor extends Actor {
   // implicit val formats = DefaultFormats
   
   def receive = {    
     // Handle get request
-    case get:Get => 
+    case get:Get =>       
       get.response.setContentType(MediaType.APPLICATION_JSON)
-      var req = get.request.getParameter("geo")
-      if (req == null) {
-        if (get.request.getContentLength <= 0) {
-          get.BadRequest("you need to put geo value")
-        } else {
-          req = get.request.getReader().readLine
-        }        
-      } 
+      get.response.setCharacterEncoding("UTF-8")
       
-      if (req != null) {
-        var geoReqList = List[GeoReq]()
-        // Parse the given json strings and convert to list of Geo
-        // object format.
-        try {
-          val json = parse(req).values.asInstanceOf[List[Map[String, String]]]
-          json.reverse.foreach(x => {
-            val geoReq = new GeoReq(x.get("id").orNull, x.get("geo").orNull, x.get("src").orNull)
-            if (geoReq != null) {
-              geoReqList ::= geoReq
-            }
-          })
-
-          // Call geocodingActor to process geo recognition task with
-          // the given geo input and request
-          geocodingActor ! GeoRequest(geoReqList, get)  
-        } catch {
-          case e: JsonParser.ParseException =>
-            get.BadRequest("geo parameter cannot be parsed")
-        }                
-      }
-      // implicit val formats = DefaultFormats
-      // val ggg = parse(req).extract[Geo]
+      val geo = get.request.getParameter("geo")
+      val src = get.request.getParameter("src")
+      val id = get.request.getParameter("id")
+      var geoReqList = List[GeoReq]()
+      var badRequest = ("status" -> "bad_request") ~ ("results" -> "")
+      
+      if (geo == null || src == null || id == null) {
+        if (get.request.getContentLength <= 0) {
+          get.OK(Printer.compact(JsonAST.render(badRequest)))
+        } else {
+          var req = get.request.getReader().readLine          
+          if (req != null) {                        
+            // Parse the given json strings and convert to list of Geo
+            // object format.
+            try {
+              val json = parse(req).values.asInstanceOf[List[Map[String, String]]]
+              json.reverse.foreach(x => {
+                val geoReq = GeoReq(x.get("id").orNull, 
+                  x.get("geo").orNull, x.get("src").orNull)
+                if (geoReq != null) {
+                  geoReqList ::= geoReq
+                }
+              })              
+            } catch {
+              case _ =>
+                get.OK(Printer.compact(JsonAST.render(badRequest)))
+            }                
+          } else {
+            get.OK(Printer.compact(JsonAST.render(badRequest)))
+          }
+        }        
+      } else {
+        geoReqList ::= GeoReq(id, geo, src)
+      }      
+      
+      if (geoReqList.size > 0) {
+        // Call geocodingActor to process geo recognition task with
+        // the given geo input and request
+        geocodingActor ! GeoRequest(geoReqList, get)
+      }      
+      
     case other:RequestMethod => other NotAllowed "unsupported request"
   }
 }

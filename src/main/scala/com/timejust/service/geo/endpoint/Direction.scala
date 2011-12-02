@@ -8,7 +8,7 @@ import akka.routing.Routing
 import net.liftweb.json._
 import net.liftweb.json.JsonDSL._
 import com.timejust.service.geo.actor._
-import com.timejust.service.geo.actor.GeocodingEngine._
+import com.timejust.service.geo.actor.DirectionEngine._
 import com.timejust.service.geo.lib.timejust._
 import javax.ws.rs.core.MediaType  
 
@@ -68,12 +68,26 @@ class Direction extends Actor with Endpoint {
 /**
  * @brief Geo Direction service handler to respond to some HTTP requests
  *
- * request format json -> 
- *   [{"id":"1","geo":"rue cauchy","src":"192.168.0.21"},
- *    {"id":"2","geo":"26 rue longchamp","src":"192.168.0.21"}]
- * response format json -> 
- *   [{"id":"1","result":{"status":"ok","geo":["rue cauchy"]}},
- *    {"id":"2","result":{"status":"invalid request"}}]
+ * Sample: 
+ * - Single request with address
+ *  http://service.timejust.com/v1/geo/direction?
+ *    id=1&origin=8 rue cauchy&destination=26 rue de longchamp&time=13121221212
+ *
+ * - Single request with geo position
+ *  http://service.timejust.com/v1/geo/direction?
+ *    id=1&origin=2.3458,48.8289&destination=2.3522,42118.8434&time=13121221212
+ *
+ * - Multiple request with address
+ *  json -> 
+ * [{"id":"1",
+ *   "origin":"8 rue cauchy",
+ *   "destination":"26 rue de longchamp",
+ *   "time":"1232132"},
+ *  {"id":"2",
+ *   "origin":"8 rue cauchy",
+ *   "destination":"26 rue de longchamp",
+ *   "time":"1232132"}]
+ * 
  */
 class DirectionActor extends Actor {
   // implicit val formats = DefaultFormats
@@ -82,41 +96,51 @@ class DirectionActor extends Actor {
     // Handle get request
     case get:Get => 
       get.response.setContentType(MediaType.APPLICATION_JSON)
-      /*
-      var req = get.request.getParameter("geo")
-      if (req == null) {
+      val id = get.request.getParameter("id")
+      val origin = get.request.getParameter("origin")
+      val destination = get.request.getParameter("destination")
+      val time = get.request.getParameter("time")
+      var dirReqList = List[DirReq]()
+      var badRequest = ("status" -> "bad_request") ~ ("results" -> "")
+      
+      if (id == null || origin == null || destination == null || 
+          time == null) {
         if (get.request.getContentLength <= 0) {
-          get.BadRequest("you need to put geo value")
+          get.OK(Printer.compact(JsonAST.render(badRequest)))
         } else {
-          req = get.request.getReader().readLine
+          var req = get.request.getReader().readLine          
+          if (req != null) {                        
+            // Parse the given json strings and convert to list of Geo
+            // object format.
+            try {
+              /*
+              val json = parse(req).values.asInstanceOf[List[Map[String, String]]]
+              json.reverse.foreach(x => {
+                val geoReq = GeoReq(x.get("id").orNull, 
+                  x.get("geo").orNull, x.get("src").orNull)
+                if (geoReq != null) {
+                  geoReqList ::= geoReq
+                }
+              })
+              */              
+            } catch {
+              case e: JsonParser.ParseException =>
+                get.OK(Printer.compact(JsonAST.render(badRequest)))
+            }                
+          } else {
+            get.OK(Printer.compact(JsonAST.render(badRequest)))
+          }
         }        
-      } 
-      */
-      /*
-      if (req != null) {
-        println(req)
-        var geoReqList = List[GeoReq]()
-        // Parse the given json strings and convert to list of Geo
-        // object format.
-        try {
-          val json = parse(req).values.asInstanceOf[List[Map[String, String]]]
-          json.reverse.foreach(x => {
-            val geoReq = new GeoReq(x.get("id").orNull, x.get("geo").orNull, x.get("src").orNull)
-            if (geoReq != null) {
-              geoReqList ::= geoReq
-            }
-          })
-
-          // Call geocodingActor to process geo recognition task with
-          // the given geo input and request
-          geocodingActor ! GeoRequest(geoReqList, get)  
-        } catch {
-          case e: JsonParser.ParseException =>
-            get.BadRequest("geo parameter cannot be parsed")
-        }                
-      }
-      */
-      get.OK("HAHA")
+      } else {
+        dirReqList ::= DirReq(id, origin, destination, time)
+      }      
+      
+      if (dirReqList.size > 0) {
+        // Call directionActor to process finding direction task with
+        // the given direction input and request
+        directionActor ! DirRequest(dirReqList, get)
+        get.OK("HAHA")
+      }      
       
     case other:RequestMethod => other NotAllowed "unsupported request"
   }

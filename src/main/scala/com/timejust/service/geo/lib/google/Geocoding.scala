@@ -18,22 +18,9 @@ import net.liftweb.json.JsonDSL._
  * Implementation of google geocoding api in asynchronous manner
  */
 object Geocoding { 
-  class Geocode(id: String, address: String, latlng: String, bounds: String = "", 
-    sensor: Boolean = false, region: String = "", language: String = "") {
-    val id_ = id
-    val address_ = address
-    val latlng_ = latlng
-    val bounds_ = bounds
-    val sensor_ = sensor
-    val region_ = region
-    val language_ = language
-  }
-  
-  class GeocodeResult(arg0: String, arg1: Boolean, arg2: List[String]) {
-    val id = arg0
-    var success = arg1
-    var results = arg2
-  }
+  case class Geocode(id: String, address: String, latlng: String, bounds: String = "", 
+    sensor: Boolean = false, region: String = "", language: String = "")
+  case class GeocodeResult(id: String, success: Boolean, results: List[String])
   
   case class Request(id: String, reply: ActorRef, reqs: List[Geocode])  
   case class Response(id: String, resps: Map[String, GeocodeResult])
@@ -73,18 +60,18 @@ object Geocoding {
       case Request(id, reply, reqs) =>
         var httpReqs = List[HttpRequest]()
         reqs.foreach({x=> 
-          var params = Map[String, Iterable[String]]("address"->List[String](x.address_), 
-            "sensor"->List[String]({if (x.sensor_) { "true" } else {"false" }}))
-          if (x.latlng_ != "")
-            params += "latlng" -> List[String](x.latlng_)
-          if (x.bounds_ != "")
-            params += "bounds" -> List[String](x.bounds_)
-          if (x.region_ != "")
-            params += "region" -> List[String](x.region_)
-          if (x.language_ != "")
-            params += "language" -> List[String](x.language_)
+          var params = Map[String, Iterable[String]]("address"->List[String](x.address), 
+            "sensor"->List[String]({if (x.sensor) { "true" } else {"false" }}))
+          if (x.latlng != "")
+            params += "latlng" -> List[String](x.latlng)
+          if (x.bounds != "")
+            params += "bounds" -> List[String](x.bounds)
+          if (x.region != "")
+            params += "region" -> List[String](x.region)
+          if (x.language != "")
+            params += "language" -> List[String](x.language)
             
-          val req = new HttpRequest(x.id_, apiUrl, params)
+          val req = new HttpRequest(x.id, apiUrl, params)
           httpReqs ::= req
         });
           

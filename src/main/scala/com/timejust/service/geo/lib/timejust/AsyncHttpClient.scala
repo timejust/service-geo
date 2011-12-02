@@ -59,7 +59,9 @@ object AsyncHttpClientPool {
       var jMap = new java.util.HashMap[String, java.util.Collection[String]]()
       sMap.foreach({x=>
         var array = new java.util.ArrayList[String]()
-        x._2.foreach({y=>array.add(y)})
+        x._2.foreach({y=>        
+          // println(y) 
+          array.add(y)})
         jMap.put((x._1), array)
       })
       new FluentStringsMap(jMap)

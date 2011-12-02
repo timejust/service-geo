@@ -22,19 +22,15 @@ import net.liftweb.json.JsonDSL._
 import net.liftweb.json.Printer._
 
 /**
- *
+ * Timejust Geocoding proxy enine which uses semantic, 
+ * google geocoding and place apis.
  */
 object GeocodingEngine {
   /**
    * Geo request and response holder also support transform function
    * to map
    */
-  class GeoReq(id: String, geo: String, src: String) {
-    val id_ = id
-    var geo_ = geo
-    var status = "ok"
-    val src_ = src    
-  }
+  case class GeoReq(id: String, geo: String, src: String)
   
   class GeoRes(arg0: String, arg1: String, arg2: List[String]) {    
     val id = arg0
@@ -53,7 +49,12 @@ object GeocodingEngine {
     var results = _results
   }
   
-  case class GeoRequest(geoList:List[GeoReq], get:Get)
+  sealed trait Message
+  
+  /**
+   * Event signal from endpoint to worker actor
+   */
+  case class GeoRequest(geoList:List[GeoReq], get:Get) extends Message
      
   val googleApiKey = "AIzaSyCN7jqExZDKOnQYo01Vc2zNja9d_tSQeiQ"
    
@@ -63,7 +64,11 @@ object GeocodingEngine {
   // Wrap them with a load-balancing router
   val geocodingActor = Routing.loadBalancerActor(CyclicIterator(actors)).start()
   
-  // "https://maps.googleapis.com/maps/api/place/search/json?location=48.884831,2.26851&radius=10000&langage=fr&sensor=false&key=AIzaSyBpMGFoaAHntl2Njzhl8y4_msYW0OSsNCc&name=" . urlencode($add1);
+  /**
+   * Geocoding handler parses input request and run semantic engine to polish
+   * out the given addresses, and pass to each suitable third party engine to
+   * get appropriate address name.
+   */
   class GeocodingHandler() extends Actor {   
     self.lifeCycle = Permanent  
     
@@ -82,17 +87,24 @@ object GeocodingEngine {
         var places = List[Place]()
         var geoPreResp = List[GeoRes]()
         var method = reqNone
+        var id = ""
+        var geo = ""
+        var status = ""
         
         geoList.foreach(x => {
+          id = x.id
+          geo = x.geo
+          status = "ok"
+          
           // So some typographic cleansing the given geo value
-          var result = SemanticAnalysisFR.typographicCleansing(x.geo_)
+          var result = SemanticAnalysisFR.typographicCleansing(geo)
           result = SemanticAnalysisFR.lexicalAnalysis(result)    
-          val r = SemanticAnalysisFR.syntaxAnalysis(result)
+          val r = SemanticAnalysisFR.syntaxAnalysis(result)         
           
           if (r != SemanticAnalysisFR.syntax_ok) {
             // If there is syntax error, just return error without geo data
-            x.status = r
-            x.geo_ = ""
+            status = r
+            geo = ""
           } else {
             // If syntax is ok, we do some alaysis whether it contains
             // postal address, place names, or firms.
@@ -110,19 +122,19 @@ object GeocodingEngine {
               method |= reqGoogleGeocoding  
               
               // Use google geocoding api to recognize the given address
-              geoCodes ::= new Geocode(x.id_, result, "", 
+              geoCodes ::= new Geocode(id, result, "", 
                 "48.684831,2.06851|49.084831,2.46851")
             } else {
               method |= reqGooglePlace  
               
               // Use google places search api to recognize the given 
               // place information
-              places ::= new Place(x.id_, googleApiKey, "48.884831,2.26851",
+              places ::= new Place(id, googleApiKey, "48.884831,2.26851",
                 "10000", result)
             }                                      
           }      
                     
-          geoPreResp ::= new GeoRes(x.id_, x.status, List[String](x.geo_))    
+          geoPreResp ::= new GeoRes(id, status, List[String](geo))    
         })      
                            
         if ((method & reqGoogleGeocoding) > 0 || (method & reqGooglePlace) > 0) {
@@ -207,7 +219,7 @@ object GeocodingEngine {
                 
         geoApi.method -= reqGooglePlace
         if (geoApi.get != null && geoApi.method == 0) {
-          val json = ("status" -> status) ~ ("results" -> results)
+          val json = ("status" -> status) ~ ("results" -> results)          
           geoApi.get.OK(compact(JsonAST.render(json))) 
           geoResps -= id   
         }                

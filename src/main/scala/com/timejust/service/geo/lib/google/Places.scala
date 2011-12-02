@@ -17,26 +17,11 @@ import net.liftweb.json.JsonDSL._
 /**
  * Implementation of google places api in asynchronous manner
  */
-object Places { 
-  class Place(_id: String, _key: String, _location: String, _radius: String, 
-    _name: String = "", _sensor: Boolean = false, _keyword: String = "", 
-    _language: String = "", _types: String = "") {    
-    val id = _id
-    val key = _key
-    val location = _location
-    val radius = _radius
-    val name = _name
-    val sensor = _sensor
-    val keyword = _keyword
-    val language = _language
-    val types = _types
-  }
-  
-  class PlaceResult(_id: String, _success: Boolean, _results: List[String]) {
-    val id = _id
-    var success = _success
-    var results = _results
-  }
+object Places {  
+  case class Place(id: String, key: String, location: String, radius: String, 
+    name: String = "", sensor: Boolean = false, keyword: String = "", 
+    language: String = "", types: String = "")    
+  case class PlaceResult(id: String, success: Boolean, results: List[String])  
   
   case class Request(id: String, reply: ActorRef, reqs: List[Place])  
   case class Response(id: String, resps: Map[String, PlaceResult])
