@@ -122,20 +122,27 @@ object GeocodingEngine {
             result = if (add != null) { add.trim } else { result.trim }
             
             val loc = GeoLocation.getLocation(x.src)
-            val latlng = loc.latitude + "," + loc.longitude
-             
+            var latlng = ""
+            var country = ""
+            
+            if (loc != null) {
+              latlng = loc.latitude + "," + loc.longitude
+              country = loc.country
+              println(loc.city)
+            }
+                           
             println(latlng)          
-            println(loc.city)  
-            println(loc.country)  
+            println(country)  
+              
             if (googleGeo == true) {        
               method |= reqGoogleGeocoding  
               
               // Use google geocoding api to recognize the given address
-              geoCodes ::= new Geocode(id, result, latlng, /*
+              geoCodes ::= new Geocode(id, result, "",/*latlng, 
                 (loc.latitude.toFloat - 0.5).toString + "," + 
                 (loc.longitude.toFloat - 0.5).toString + "|" +
                 (loc.latitude.toFloat + 0.5).toString + "," + 
-                (loc.longitude.toFloat + 0.5).toString, */ "", false, loc.country)
+                (loc.longitude.toFloat + 0.5).toString, */ "", false, country)
             } else {
               method |= reqGooglePlace  
               
