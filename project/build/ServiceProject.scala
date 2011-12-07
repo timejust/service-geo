@@ -17,7 +17,8 @@ class ServiceProject(info: ProjectInfo) extends DefaultWebProject(info) with Akk
     "org.mortbay.jetty" % "servlet-api" % "3.0.20100224" % "provided",
     "net.liftweb" % "lift-json_2.9.1" % "2.4-M5" % "compile",
     "ch.qos.logback" % "logback-classic" % "0.9.28" % "runtime",
-    "com.ning" % "async-http-client" % "1.6.4" % "compile"
+    "com.ning" % "async-http-client" % "1.6.4" % "compile",
+    "mysql" % "mysql-connector-java" % "5.1.12" % "compile"
   ) ++ super.libraryDependencies        
   
   override def jettyPort = 9000

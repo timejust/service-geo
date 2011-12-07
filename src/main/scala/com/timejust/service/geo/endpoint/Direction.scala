@@ -95,6 +95,7 @@ class DirectionActor extends Actor {
   def receive = {    
     // Handle get request
     case get:Get => 
+    /*
       get.response.setContentType(MediaType.APPLICATION_JSON)
       val id = get.request.getParameter("id")
       val origin = get.request.getParameter("origin")
@@ -140,7 +141,12 @@ class DirectionActor extends Actor {
         // the given direction input and request
         directionActor ! DirRequest(dirReqList, get)
         get.OK("HAHA")
-      }      
+      }  
+      */
+      val loc = GeoLocation.getLocation("88.180.117.116")
+      println(loc.country)
+      println(loc.city)
+      get.OK("HAHA")
       
     case other:RequestMethod => other NotAllowed "unsupported request"
   }

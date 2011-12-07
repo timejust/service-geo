@@ -1,6 +1,7 @@
 package com.timejust.service.geo.actor
 
 import akka.actor._
+import akka.config.Config._ 
 import akka.config.Supervision.OneForOneStrategy
 import akka.config.Supervision.Permanent
 import akka.dispatch.Dispatchers
@@ -56,7 +57,8 @@ object GeocodingEngine {
    */
   case class GeoRequest(geoList:List[GeoReq], get:Get) extends Message
      
-  val googleApiKey = "AIzaSyCN7jqExZDKOnQYo01Vc2zNja9d_tSQeiQ"
+  val googleApiKey = 
+    config.getString("google.api-key", "AIzaSyCN7jqExZDKOnQYo01Vc2zNja9d_tSQeiQ")
    
   // Create the Geocoding actors
   val actors = Vector.fill(4)(Actor.actorOf[GeocodingHandler].start())
@@ -118,19 +120,28 @@ object GeocodingEngine {
             } 
 
             result = if (add != null) { add.trim } else { result.trim }
+            
+            val loc = GeoLocation.getLocation(x.src)
+            val latlng = loc.latitude + "," + loc.longitude
+             
+            println(latlng)          
+            println(loc.city)  
+            println(loc.country)  
             if (googleGeo == true) {        
               method |= reqGoogleGeocoding  
               
               // Use google geocoding api to recognize the given address
-              geoCodes ::= new Geocode(id, result, "", 
-                "48.684831,2.06851|49.084831,2.46851")
+              geoCodes ::= new Geocode(id, result, latlng, /*
+                (loc.latitude.toFloat - 0.5).toString + "," + 
+                (loc.longitude.toFloat - 0.5).toString + "|" +
+                (loc.latitude.toFloat + 0.5).toString + "," + 
+                (loc.longitude.toFloat + 0.5).toString, */ "", false, loc.country)
             } else {
               method |= reqGooglePlace  
               
               // Use google places search api to recognize the given 
               // place information
-              places ::= new Place(id, googleApiKey, "48.884831,2.26851",
-                "10000", result)
+              places ::= new Place(id, googleApiKey, latlng, "10000", result)
             }                                      
           }      
                     

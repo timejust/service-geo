@@ -1,6 +1,7 @@
 package com.timejust.service.geo.lib.google
 
 import akka.actor._
+import akka.config.Config._ 
 import akka.config.Supervision.OneForOneStrategy
 import akka.config.Supervision.Permanent
 import akka.event.EventHandler
@@ -41,9 +42,10 @@ object Geocoding {
   var parents: Map[String, ActorRef] = Map[String, ActorRef]()
   
   /**
-   *
+   * 
    */
-  val apiUrl = "http://maps.googleapis.com/maps/api/geocode/json"            
+  val apiUrl = 
+    config.getString("google.geocode-api-url", "http://maps.googleapis.com/maps/api/geocode/json")
   
   /**
    * Actor to request geo data to google api in asynchronous manner

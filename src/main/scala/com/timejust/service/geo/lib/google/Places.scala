@@ -1,6 +1,7 @@
 package com.timejust.service.geo.lib.google
 
 import akka.actor._
+import akka.config.Config._ 
 import akka.config.Supervision.OneForOneStrategy
 import akka.config.Supervision.Permanent
 import akka.event.EventHandler
@@ -44,7 +45,8 @@ object Places {
   /**
    * Google place search api service url
    */
-  val apiUrl = "https://maps.googleapis.com/maps/api/place/search/json"            
+  val apiUrl = 
+    config.getString("google.place-api-url", "https://maps.googleapis.com/maps/api/place/search/json")
   
   /**
    * Actor to request geo data to google api in asynchronous manner
