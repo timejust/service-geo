@@ -7,6 +7,7 @@ import akka.config.Supervision.Permanent
 import akka.dispatch.Dispatchers
 import akka.event.EventHandler
 import akka.http.Get
+import akka.http.RequestMethod
 import akka.routing.Routing.Broadcast
 import akka.routing.CyclicIterator
 import akka.routing.Routing
@@ -43,7 +44,7 @@ object GeocodingEngine {
     }
   }
 
-  class GeocodingApi(_id: String, _get: Get, _method: Int, _results: List[GeoRes]) {
+  class GeocodingApi(_id: String, _get: RequestMethod, _method: Int, _results: List[GeoRes]) {
     val id = _id
     val get = _get
     var method = _method
@@ -55,7 +56,7 @@ object GeocodingEngine {
   /**
    * Event signal from endpoint to worker actor
    */
-  case class GeoRequest(geoList:List[GeoReq], get:Get) extends Message
+  case class GeoRequest(geoList:List[GeoReq], get:RequestMethod) extends Message
      
   val googleApiKey = 
     config.getString("google.api-key", "AIzaSyCN7jqExZDKOnQYo01Vc2zNja9d_tSQeiQ")
@@ -138,7 +139,7 @@ object GeocodingEngine {
               method |= reqGoogleGeocoding  
               
               // Use google geocoding api to recognize the given address
-              geoCodes ::= new Geocode(id, result, "",/*latlng, 
+              geoCodes ::= new Geocode(id, result, "",/*latlng,* 
                 (loc.latitude.toFloat - 0.5).toString + "," + 
                 (loc.longitude.toFloat - 0.5).toString + "|" +
                 (loc.latitude.toFloat + 0.5).toString + "," + 

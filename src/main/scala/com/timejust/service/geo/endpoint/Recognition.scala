@@ -97,6 +97,43 @@ class RecognitionActor extends Actor {
   // implicit val formats = DefaultFormats
   
   def receive = {    
+    case post:Post =>
+      post.response.setContentType(MediaType.APPLICATION_JSON)
+      post.response.setCharacterEncoding("UTF-8")
+      var geoReqList = List[GeoReq]()
+      var badRequest = ("status" -> "bad_request") ~ ("results" -> "")
+      
+      if (post.request.getContentLength <= 0) {
+        post.OK(Printer.compact(JsonAST.render(badRequest)))
+      } else {
+        var req = post.request.getReader().readLine          
+        if (req != null) {                        
+          // Parse the given json strings and convert to list of Geo
+          // object format.
+          try {
+            val json = parse(req).values.asInstanceOf[List[Map[String, String]]]
+            json.reverse.foreach(x => {
+              val geoReq = GeoReq(x.get("id").orNull, 
+                x.get("geo").orNull, x.get("src").orNull)
+              if (geoReq != null) {
+                geoReqList ::= geoReq
+              }
+            })              
+          } catch {
+            case _ =>
+              post.OK(Printer.compact(JsonAST.render(badRequest)))
+          }                
+        } else {
+          post.OK(Printer.compact(JsonAST.render(badRequest)))
+        }
+      }
+      
+      if (geoReqList.size > 0) {
+        // Call geocodingActor to process geo recognition task with
+        // the given geo input and request
+        geocodingActor ! GeoRequest(geoReqList, post)
+      }
+      
     // Handle get request
     case get:Get =>       
       get.response.setContentType(MediaType.APPLICATION_JSON)
@@ -109,30 +146,7 @@ class RecognitionActor extends Actor {
       var badRequest = ("status" -> "bad_request") ~ ("results" -> "")
       
       if (geo == null || src == null || id == null) {
-        if (get.request.getContentLength <= 0) {
-          get.OK(Printer.compact(JsonAST.render(badRequest)))
-        } else {
-          var req = get.request.getReader().readLine          
-          if (req != null) {                        
-            // Parse the given json strings and convert to list of Geo
-            // object format.
-            try {
-              val json = parse(req).values.asInstanceOf[List[Map[String, String]]]
-              json.reverse.foreach(x => {
-                val geoReq = GeoReq(x.get("id").orNull, 
-                  x.get("geo").orNull, x.get("src").orNull)
-                if (geoReq != null) {
-                  geoReqList ::= geoReq
-                }
-              })              
-            } catch {
-              case _ =>
-                get.OK(Printer.compact(JsonAST.render(badRequest)))
-            }                
-          } else {
-            get.OK(Printer.compact(JsonAST.render(badRequest)))
-          }
-        }        
+        get.OK(Printer.compact(JsonAST.render(badRequest)))        
       } else {
         geoReqList ::= GeoReq(id, geo, src)
       }      
