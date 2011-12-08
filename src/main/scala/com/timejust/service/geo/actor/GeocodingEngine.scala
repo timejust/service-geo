@@ -139,11 +139,11 @@ object GeocodingEngine {
               method |= reqGoogleGeocoding  
               
               // Use google geocoding api to recognize the given address
-              geoCodes ::= new Geocode(id, result, "",/*latlng,* 
-                (loc.latitude.toFloat - 0.5).toString + "," + 
-                (loc.longitude.toFloat - 0.5).toString + "|" +
-                (loc.latitude.toFloat + 0.5).toString + "," + 
-                (loc.longitude.toFloat + 0.5).toString, */ "", false, country)
+              geoCodes ::= new Geocode(id, result, "",/*latlng,*/ 
+                (loc.latitude.toFloat - 0.3).toString + "," + 
+                (loc.longitude.toFloat - 0.3).toString + "|" +
+                (loc.latitude.toFloat + 0.3).toString + "," + 
+                (loc.longitude.toFloat + 0.3).toString, false, country)
             } else {
               method |= reqGooglePlace  
               
