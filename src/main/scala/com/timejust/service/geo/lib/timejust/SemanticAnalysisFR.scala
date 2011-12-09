@@ -6,6 +6,19 @@ import scala.util.matching.Regex
  * @brief
  */
 object SemanticAnalysisFR {
+  val syntax_ok = "syntax_ok"
+  val syntax_call = "syntax_error_call"
+  val syntax_tbd = "sytax_error_tbd"
+
+  object PlaceType {
+    val hotel = "lodging"
+    val train_station = "train_station"
+    val metro_station = "subway_station"
+    val hospital = "hospital"
+  }
+  
+  case class Place(name: String, types: List[String])
+  
   def typographicCleansing(geo: String): String = {
     var result = geo
     // Typographic cleansing    
@@ -100,20 +113,16 @@ object SemanticAnalysisFR {
     result
   }
   
-  val syntax_ok = "syntax_ok"
-  val syntax_call = "syntax_error_call"
-  val syntax_tbd = "sytax_error_tbd"
-  
   def syntaxAnalysis(geo: String): String = {
     var result = syntax_ok
     
     // LEXEMES SEQUENCE = CALLS (DETECTION)
     // Token = CALL
-    if (geo.matches("""[Cc]all""") || geo.matches("""[Tt]eléphon""") || 
-      geo.matches("""[Tt]elephon""") || geo.matches("""[Tt]élephon""") || 
-      geo.matches("""[Tt]éléphon""") || geo.matches("""[Tt]élephon""") || 
-      geo.matches("""[Ss]kype""") || geo.matches("""[ \t]FT[ \t]""") || 
-      geo.matches("""[Cc][Cc][mM]""")) {
+    if (geo.matches("""^(.*)[Cc]all(.*)$""") || geo.matches("""^(.*)[Tt]eléphon(.*)$""") || 
+      geo.matches("""^(.*)[Tt]elephon(.*)$""") || geo.matches("""^(.*)[Tt]élephon(.*)$""") || 
+      geo.matches("""^(.*)[Tt]éléphon(.*)$""") || geo.matches("""^(.*)[Tt]élephon(.*)$""") || 
+      geo.matches("""^(.*)[Ss]kype(.*)$""") || geo.matches("""^(.*)FT(.*)$""") || 
+      geo.matches("""^(.*)[Cc][Cc][mM](.*)$""")) {
       result = syntax_call
     } else if (geo.matches("""/.*([Aa]|à)[ \t]?[Dd](e|é)finir.*/""") || 
       geo.matches("""/.*[Tt][Bb][Dd].*/""")) {
@@ -146,6 +155,9 @@ object SemanticAnalysisFR {
     val acote = """^(?:A|a|à)[ \t]?[Cc](?:o|ô)t(?:é|e)[ \t]?d[^ \']*\'?(.*)$""".r
     val hospital = """^\D*(([Hh]opital|[Cc]lini[(que)c]).{9}\w*)(.*)$""".r
     val station = """^.*(([Gg]are|[Ss]tation|[Mm]etro|[Mm]°).{6}\w*)(.*)$""".r
+    
+    val hotel = """^.*(([Hh][oô]tel)\w*)(.*)$""".r
+    
     val aprox = """^(?:A|a|à)[ \t]?[Pp]roximit(?:é|e)[ \t]?d[^ \']*\'?(.*)$""".r
     val chez_ = """^[Cc]hez[ \t]?[ \t]?([^ ]*)[ \t]?$""".r
     

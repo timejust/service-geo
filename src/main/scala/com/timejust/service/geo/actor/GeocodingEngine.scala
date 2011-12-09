@@ -131,10 +131,7 @@ object GeocodingEngine {
               country = loc.country
               println(loc.city)
             }
-                           
-            println(latlng)          
-            println(country)  
-              
+                                
             if (googleGeo == true) {        
               method |= reqGoogleGeocoding  
               
@@ -149,7 +146,7 @@ object GeocodingEngine {
               
               // Use google places search api to recognize the given 
               // place information
-              places ::= new Place(id, googleApiKey, latlng, "10000", result)
+              places ::= new Place(id, googleApiKey, latlng, "50000", result)
             }                                      
           }      
                     

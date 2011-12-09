@@ -78,6 +78,7 @@ object Places {
           if (x.types != "")
             params += "types" -> List[String](x.types)
             
+          println(params)
           val req = new HttpRequest(x.id, apiUrl, params)
           httpReqs ::= req
         });
