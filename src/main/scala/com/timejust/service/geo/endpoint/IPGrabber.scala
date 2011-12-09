@@ -76,17 +76,26 @@ class IPGrabberActor extends Actor {
       get.response.setContentType(MediaType.APPLICATION_JSON)
       get.response.setCharacterEncoding("UTF-8")
       
-      var serviceUnavailable = "service_unavailable"
-      ("status" -> "service_unavailable") ~ ("results" -> "")
+      val callback = get.request.getParameter("callback")
+      val serviceUnavailable = "service_unavailable"
       var ip = get.request.getRemoteAddr()
       var status = "ok"      
+      var response = ""
+            
       if (ip == null) {
         ip = ""
         status = serviceUnavailable
       }
       
-      val json = ("status" -> status) ~ ("ip" -> ip)          
-      get.OK(Printer.compact(JsonAST.render(json)))        
+      val json = ("status" -> status) ~ ("ip" -> ip)                
+      if (callback != null) {
+        get.response.setContentType("application/javascript")
+        response = callback + "(" + Printer.compact(JsonAST.render(json)) + ");"
+      } else {
+        response = Printer.compact(JsonAST.render(json))
+      }      
+            
+      get.OK(response)        
                 
     case other:RequestMethod => other NotAllowed "unsupported request"
   }
