@@ -17,6 +17,7 @@ import com.timejust.service.geo.lib.google._
 import com.timejust.service.geo.lib.google.Geocoding._
 import com.timejust.service.geo.lib.google.Places._
 import com.timejust.service.geo.lib.timejust._
+import java.net.URLDecoder
 import java.net.URLEncoder
 import net.liftweb.json.JsonAST
 import net.liftweb.json.JsonDSL._
@@ -117,10 +118,10 @@ object GeocodingEngine {
             } 
 
             result = if (add != null) { add.trim } else { result.trim }
-            
+
             val loc = GeoLocation.getLocation(x.src)
             var latlng = ""
-            var country = ""
+            var country = "fr"
             
             if (loc != null) {
               latlng = loc.latitude + "," + loc.longitude
@@ -143,7 +144,7 @@ object GeocodingEngine {
               // Use google places search api to recognize the given 
               // place information
               places ::= new Place(x.id, googleApiKey, latlng, "50000", result)
-            }                                      
+            }                            
           }      
                     
           geoPreResp ::= new GeoRes(x.id, status, List[String](geo))    

@@ -5,13 +5,14 @@ import akka.http._
 import akka.event._
 import akka.routing.CyclicIterator
 import akka.routing.Routing
-import net.liftweb.json._
-import net.liftweb.json.JsonDSL._
 import com.timejust.service.geo.actor._
 import com.timejust.service.geo.actor.DirectionEngine._
 import com.timejust.service.geo.lib.timejust._
 import com.timejust.service.geo.lib.timejust.DirectionPlugin._
 import javax.ws.rs.core.MediaType  
+import java.net.URLDecoder
+import net.liftweb.json._
+import net.liftweb.json.JsonDSL._
 
 /**
  * End point class for geo direction api
@@ -82,6 +83,12 @@ class Direction extends Actor with Endpoint {
  * 
  */
 class DirectionActor extends Actor {
+  def decodeUTF8(in: String) = {
+    if (in != null)
+      URLDecoder.decode(in, "UTF-8")
+    else
+      ""
+  }
 
   def receive = {    
     case post:Post =>

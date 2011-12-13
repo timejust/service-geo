@@ -5,14 +5,15 @@ import akka.http._
 import akka.event._
 import akka.routing.CyclicIterator
 import akka.routing.Routing
+import com.timejust.service.geo.actor._
+import com.timejust.service.geo.actor.GeocodingEngine._
+import com.timejust.service.geo.lib.timejust._
+import java.net.URLDecoder
+import javax.ws.rs.core.MediaType  
 import net.liftweb.json._
 import net.liftweb.json.JsonAST
 import net.liftweb.json.JsonDSL._
 import net.liftweb.json.Printer._
-import com.timejust.service.geo.actor._
-import com.timejust.service.geo.actor.GeocodingEngine._
-import com.timejust.service.geo.lib.timejust._
-import javax.ws.rs.core.MediaType  
   
 
 /**
@@ -94,7 +95,12 @@ class Recognition extends Actor with Endpoint {
  *   ]
  */
 class RecognitionActor extends Actor {
-  // implicit val formats = DefaultFormats
+  def decodeUTF8(in: String) = {
+    if (in != null)
+      URLDecoder.decode(in, "UTF-8")
+    else
+      ""
+  }
   
   def receive = {    
     case post:Post =>
@@ -114,7 +120,7 @@ class RecognitionActor extends Actor {
             val json = parse(req).values.asInstanceOf[List[Map[String, String]]]
             json.reverse.foreach(x => {
               val geoReq = GeoReq(x.get("id").orNull, 
-                x.get("geo").orNull, x.get("src").orNull)
+                decodeUTF8(x.get("geo").orNull), x.get("src").orNull)
               if (geoReq != null) {
                 geoReqList ::= geoReq
               }
@@ -139,7 +145,7 @@ class RecognitionActor extends Actor {
       get.response.setContentType(MediaType.APPLICATION_JSON)
       get.response.setCharacterEncoding("UTF-8")
       
-      val geo = get.request.getParameter("geo")
+      val geo = decodeUTF8(get.request.getParameter("geo"))
       val src = get.request.getParameter("src")
       val id = get.request.getParameter("id")
       var geoReqList = List[GeoReq]()
