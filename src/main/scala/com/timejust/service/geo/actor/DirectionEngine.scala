@@ -211,7 +211,8 @@ object DirectionEngine {
         } else {                              
           resps.foreach({case (k: String, v: ResponseRes[Travel])=>
             status = 
-              if (v.success && v.results != null) { "ok" } else { "plugin error - " + name }                                    
+              if (v.success && v.results != null) { "ok" } 
+              else { "plugin error - " + name }                                    
             if (status == "ok") {
               results ::= (k -> 
                 ("status" -> status) ~ ("results" -> v.results.toJObject))  
@@ -226,7 +227,8 @@ object DirectionEngine {
           dirApi.pop(name)                
           if (dirApi.request != null && dirApi.size == 0) {
             val json = ("status" -> status) ~ ("results" -> results)
-            dirApi.request.OK(compact(JsonAST.render(json))) 
+            dirApi.request.OK(new String(
+              compact(JsonAST.render(json)).getBytes("ISO-8859-1"), "UTF-8"))
             dirResps -= id   
           }          
         }        

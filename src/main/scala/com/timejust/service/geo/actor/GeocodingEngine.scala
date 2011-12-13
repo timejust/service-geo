@@ -169,7 +169,8 @@ object GeocodingEngine {
           })
           
           val json = ("status" -> "ok") ~ ("results" -> results)
-          get.OK(compact(JsonAST.render(json))) 
+          get.OK(new String(
+            compact(JsonAST.render(json)).getBytes("ISO-8859-1"), "UTF-8"))
         } 
         
       case Geocoding.Response(id, resps) =>      
@@ -202,7 +203,9 @@ object GeocodingEngine {
           
           if (geoApi.request != null && geoApi.method == 0) {
             val json = ("status" -> status) ~ ("results" -> results)
-            geoApi.request.OK(compact(JsonAST.render(json))) 
+            geoApi.request.OK(
+              new String(
+                compact(JsonAST.render(json)).getBytes("ISO-8859-1"), "UTF-8")) 
             geoResps -= id   
           }          
         }   
@@ -236,7 +239,8 @@ object GeocodingEngine {
           geoApi.method -= reqGooglePlace          
           if (geoApi.request != null && geoApi.method == 0) {
             val json = ("status" -> status) ~ ("results" -> results)          
-            geoApi.request.OK(compact(JsonAST.render(json))) 
+            geoApi.request.OK(new String(
+              compact(JsonAST.render(json)).getBytes("ISO-8859-1"), "UTF-8"))
             geoResps -= id   
           }                          
         }                    
