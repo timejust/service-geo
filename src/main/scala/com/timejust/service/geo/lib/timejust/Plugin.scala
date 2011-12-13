@@ -11,29 +11,32 @@ import akka.routing.Routing.Broadcast
 object Plugin {
   // case class DirectionResult(id: String, success: Boolean, results: List[String])
   case class RequestMap[K, V](id: String, params: Map[K, V])
-  case class ResponseList[T](id: String, success: Boolean, results: List[T])
-  case class ResponseMap[K, V](id: String, success: Boolean, results: Map[K, V])
+  // case class ResponseList[T](id: String, success: Boolean, results: List[T])
+  // case class ResponseMap[K, V](id: String, success: Boolean, results: Map[K, V])
+  case class ResponseRes[T](id: String, success: Boolean, results: T)
   
   case class PluginRequest[T](id: String, reply: ActorRef, reqs: List[T])  
-  // case class PluginResponse(id: String, resps: Map[String, DirectionResult])
+  case class PluginResponse[T](name: String, id: String, resps: Map[String, T])
   
   abstract class PluginFactory() {
-    var plugins = Map[String, ActorRef]()
+    // var plugins = Map[String, PluggableActor]()
+    var plugins = Map[String, PluginRef]()
     
-    def name(): String
-    
-    def createPlugin(num: Int, actor: ActorRef): ActorRef = {
-      var plugin = findPlugin()
-      if (plugin == null) {
-        val actors = Vector.fill(num)(actor)
-        plugin = Routing.loadBalancerActor(CyclicIterator(actors)).start()
+    def name(): String        
+
+    def createPlugin(num: Int, actorRef: ActorRef): PluginRef = {
+      var plugin: PluginRef = findPlugin()
+      if (plugin == null) {        
+        val actors = Vector.fill(num)(actorRef)
+        plugin = 
+          PluginRef(name(), Routing.loadBalancerActor(CyclicIterator(actors)).start())
         append(plugin)
       }
       
       plugin      
     }
     
-    def append(actor: ActorRef) = {
+    def append(actor: PluginRef) = {
       plugins += (name() -> actor)
     }  
     
@@ -42,7 +45,9 @@ object Plugin {
     }
   }
   
-  abstract class PluggableActor extends Actor {
+  case class PluginRef(name: String, actorRef: ActorRef)
+  
+  abstract class PluggableActor() extends Actor {
     self.lifeCycle = Permanent
     /**
      *

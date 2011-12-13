@@ -44,8 +44,8 @@ object Geocoding {
   /**
    * 
    */
-  val apiUrl = 
-    config.getString("google.geocode-api-url", "http://maps.googleapis.com/maps/api/geocode/json")
+  val apiUrl = config.getString("google.geocode-api-url", 
+    "http://maps.googleapis.com/maps/api/geocode/json")
   
   /**
    * Actor to request geo data to google api in asynchronous manner
@@ -129,12 +129,12 @@ object Geocoding {
     /** 
      * Linking up our actors with this http client as to supervise them 
      */
-    // override def preStart = actors foreach { self.startLink(_) }
+    override def preStart = {} // actors foreach { self.startLink(_) }
 
     /**
      * When we are stopped, stop our team of  and our router
      */
-    // override def postStop() {
+    override def postStop() = {}
       // Unlinked all fetchers
     //  actors.foreach(self.unlink(_))
 

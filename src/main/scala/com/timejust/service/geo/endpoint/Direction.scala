@@ -10,8 +10,8 @@ import net.liftweb.json.JsonDSL._
 import com.timejust.service.geo.actor._
 import com.timejust.service.geo.actor.DirectionEngine._
 import com.timejust.service.geo.lib.timejust._
+import com.timejust.service.geo.lib.timejust.DirectionPlugin._
 import javax.ws.rs.core.MediaType  
-
 
 /**
  * End point class for geo direction api
@@ -35,16 +35,6 @@ class Direction extends Actor with Endpoint {
   
   // def provide(uri: String): ActorRef = Actor.actorOf[GeoRecognitionActor].start
   def provide(uri: String): ActorRef = direction
-  
-  /* 
-  def hook(uri: String): Boolean = ((uri == recognitionActor))
-  def provide(uri: String): ActorRef = {
-    if (uri == recognitionActor)
-      Actor.actorOf[GeoRecognitionActor].start
-    else 
-      actorOf[BoringActor].start()
-  } 
-  */
 
   // This is where you want to attach your endpoint hooks
   override def preStart() = {
@@ -53,7 +43,6 @@ class Direction extends Actor with Endpoint {
     // the point is that we need to attach something (for starters anyway)
     // to the root
     val root = Actor.registry.actorsFor(classOf[RootEndpoint]).head
-    // root ! Endpoint.Attach(hook, provide)
     root ! Endpoint.Attach(hook, provide)    
   }
 
@@ -71,7 +60,8 @@ class Direction extends Actor with Endpoint {
  * Sample: 
  * - Single request with address
  *  http://service.timejust.com/v1/geo/direction?
- *    id=1&origin=8 rue cauchy&destination=26 rue de longchamp&time=13121221212
+ *    id=1&origin=8 rue cauchy&destination=26 rue de longchamp&
+ *    time=13121221212&mode={train,bus,driving}
  *
  * - Single request with geo position
  *  http://service.timejust.com/v1/geo/direction?
@@ -82,71 +72,85 @@ class Direction extends Actor with Endpoint {
  * [{"id":"1",
  *   "origin":"8 rue cauchy",
  *   "destination":"26 rue de longchamp",
- *   "time":"1232132"},
+ *   "time":"1232132",
+ *   "mode":"train"},
  *  {"id":"2",
  *   "origin":"8 rue cauchy",
  *   "destination":"26 rue de longchamp",
- *   "time":"1232132"}]
+ *   "time":"1232132",
+ *   "mode":"bus"}]
  * 
  */
 class DirectionActor extends Actor {
-  // implicit val formats = DefaultFormats
-  
+
   def receive = {    
+    case post:Post =>
+      post.response.setContentType(MediaType.APPLICATION_JSON)
+      post.response.setCharacterEncoding("UTF-8")
+      var dirReqList = List[DirReq]()
+      var badRequest = ("status" -> "bad_request") ~ ("results" -> "")
+      var mode = modeDriving
+      
+      if (post.request.getContentLength <= 0) {
+        post.OK(Printer.compact(JsonAST.render(badRequest)))
+      } else {
+        var req = post.request.getReader().readLine          
+        if (req != null) {                        
+          // Parse the given json strings and convert to list of Geo
+          // object format.
+          try {
+            val json = parse(req).values.asInstanceOf[List[Map[String, String]]]
+            json.reverse.foreach(x => {
+              mode = if (x.get("mode").orNull == null) { 
+                  modeDriving } else { x("mode") }
+              val dirReq = DirReq(
+                  x("id"), x("origin"), x("destination"), x("time"), mode)
+              if (dirReq != null) {
+                dirReqList ::= dirReq
+              }
+            })              
+          } catch {
+            case _ =>
+              post.OK(Printer.compact(JsonAST.render(badRequest)))
+          }                
+        } else {
+          post.OK(Printer.compact(JsonAST.render(badRequest)))
+        }
+      }
+      
+      if (dirReqList.size > 0) {
+        // Call geocodingActor to process geo recognition task with
+        // the given geo input and request
+        directionActor ! DirRequest(dirReqList, post)
+      }
+    
     // Handle get request
     case get:Get => 
-    /*
       get.response.setContentType(MediaType.APPLICATION_JSON)
       val id = get.request.getParameter("id")
       val origin = get.request.getParameter("origin")
       val destination = get.request.getParameter("destination")
       val time = get.request.getParameter("time")
+      var mode = get.request.getParameter("mode")
       var dirReqList = List[DirReq]()
       var badRequest = ("status" -> "bad_request") ~ ("results" -> "")
       
       if (id == null || origin == null || destination == null || 
-          time == null) {
-        if (get.request.getContentLength <= 0) {
-          get.OK(Printer.compact(JsonAST.render(badRequest)))
-        } else {
-          var req = get.request.getReader().readLine          
-          if (req != null) {                        
-            // Parse the given json strings and convert to list of Geo
-            // object format.
-            try {
-              /*
-              val json = parse(req).values.asInstanceOf[List[Map[String, String]]]
-              json.reverse.foreach(x => {
-                val geoReq = GeoReq(x.get("id").orNull, 
-                  x.get("geo").orNull, x.get("src").orNull)
-                if (geoReq != null) {
-                  geoReqList ::= geoReq
-                }
-              })
-              */              
-            } catch {
-              case e: JsonParser.ParseException =>
-                get.OK(Printer.compact(JsonAST.render(badRequest)))
-            }                
-          } else {
-            get.OK(Printer.compact(JsonAST.render(badRequest)))
-          }
-        }        
+          time == null) { 
+        get.OK(Printer.compact(JsonAST.render(badRequest)))        
       } else {
-        dirReqList ::= DirReq(id, origin, destination, time)
-      }      
+        // If mode param is not given, we just assume mode is driving
+        if (mode == null)
+          mode = modeDriving
+          
+        dirReqList ::= DirReq(id, origin, destination, time, mode)
+      }
       
       if (dirReqList.size > 0) {
         // Call directionActor to process finding direction task with
         // the given direction input and request
         directionActor ! DirRequest(dirReqList, get)
-        get.OK("HAHA")
       }  
-      */
-      val loc = GeoLocation.getLocation("88.180.117.116")
-      println(loc.country)
-      println(loc.city)
-      get.OK("HAHA")
       
     case other:RequestMethod => other NotAllowed "unsupported request"
   }

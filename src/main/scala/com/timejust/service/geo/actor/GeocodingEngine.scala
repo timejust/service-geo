@@ -6,7 +6,6 @@ import akka.config.Supervision.OneForOneStrategy
 import akka.config.Supervision.Permanent
 import akka.dispatch.Dispatchers
 import akka.event.EventHandler
-import akka.http.Get
 import akka.http.RequestMethod
 import akka.routing.Routing.Broadcast
 import akka.routing.CyclicIterator
@@ -46,7 +45,7 @@ object GeocodingEngine {
 
   class GeocodingApi(_id: String, _get: RequestMethod, _method: Int, _results: List[GeoRes]) {
     val id = _id
-    val get = _get
+    val request = _get
     var method = _method
     var results = _results
   }
@@ -75,7 +74,6 @@ object GeocodingEngine {
   class GeocodingHandler() extends Actor {   
     self.lifeCycle = Permanent  
     
-    var json = List[Map[String, Map[String, String]]]()
     var geoResps = Map[String, GeocodingApi]()
     
     val reqNone = 0
@@ -90,12 +88,10 @@ object GeocodingEngine {
         var places = List[Place]()
         var geoPreResp = List[GeoRes]()
         var method = reqNone
-        var id = ""
         var geo = ""
         var status = ""
         
         geoList.foreach(x => {
-          id = x.id
           geo = x.geo
           status = "ok"
           
@@ -136,7 +132,7 @@ object GeocodingEngine {
               method |= reqGoogleGeocoding  
               
               // Use google geocoding api to recognize the given address
-              geoCodes ::= new Geocode(id, result, "",/*latlng,*/ 
+              geoCodes ::= new Geocode(x.id, result, "",/*latlng,*/ 
                 (loc.latitude.toFloat - 0.3).toString + "," + 
                 (loc.longitude.toFloat - 0.3).toString + "|" +
                 (loc.latitude.toFloat + 0.3).toString + "," + 
@@ -146,11 +142,11 @@ object GeocodingEngine {
               
               // Use google places search api to recognize the given 
               // place information
-              places ::= new Place(id, googleApiKey, latlng, "50000", result)
+              places ::= new Place(x.id, googleApiKey, latlng, "50000", result)
             }                                      
           }      
                     
-          geoPreResp ::= new GeoRes(id, status, List[String](geo))    
+          geoPreResp ::= new GeoRes(x.id, status, List[String](geo))    
         })      
                            
         if ((method & reqGoogleGeocoding) > 0 || (method & reqGooglePlace) > 0) {
@@ -182,14 +178,14 @@ object GeocodingEngine {
         var results = List[(String, JsonAST.JObject)]()
         var status = "ok"
         
-        if (geoApi == null || geoApi.get == null) {
+        if (geoApi == null || geoApi.request == null) {
           // No get object, something really bad happened.
           // just clear memories and do nothing.  
           geoResps -= id   
           EventHandler.error(self, "cannot find get object associated id - " + id)          
         } else if (geoRespList == null) {
           status = "internal error"
-        } else {                    
+        } else {               
           var gcRes: GeocodeResult = null          
           geoRespList.foreach({x=>
             gcRes = resps.get(x.id).orNull
@@ -200,13 +196,16 @@ object GeocodingEngine {
             results ::= x.toJObject
           })         
         }
-                
-        geoApi.method -= reqGoogleGeocoding
-        if (geoApi.get != null && geoApi.method == 0) {
-          val json = ("status" -> status) ~ ("results" -> results)
-          geoApi.get.OK(compact(JsonAST.render(json))) 
-          geoResps -= id   
-        }
+                     
+        if (geoApi != null) {
+          geoApi.method -= reqGoogleGeocoding               
+          
+          if (geoApi.request != null && geoApi.method == 0) {
+            val json = ("status" -> status) ~ ("results" -> results)
+            geoApi.request.OK(compact(JsonAST.render(json))) 
+            geoResps -= id   
+          }          
+        }   
         
       case Places.Response(id, resps) =>   
         val geoApi: GeocodingApi = geoResps.get(id).orNull
@@ -214,7 +213,7 @@ object GeocodingEngine {
         var results = List[(String, JsonAST.JObject)]()
         var status = "ok"
         
-        if (geoApi == null || geoApi.get == null) {
+        if (geoApi == null || geoApi.request == null) {
           // No get object, something really bad happened.
           // just clear memories and do nothing.  
           geoResps -= id  
@@ -232,13 +231,15 @@ object GeocodingEngine {
             results ::= x.toJObject
           })         
         }
-                
-        geoApi.method -= reqGooglePlace
-        if (geoApi.get != null && geoApi.method == 0) {
-          val json = ("status" -> status) ~ ("results" -> results)          
-          geoApi.get.OK(compact(JsonAST.render(json))) 
-          geoResps -= id   
-        }                
+              
+        if (geoApi != null) {
+          geoApi.method -= reqGooglePlace          
+          if (geoApi.request != null && geoApi.method == 0) {
+            val json = ("status" -> status) ~ ("results" -> results)          
+            geoApi.request.OK(compact(JsonAST.render(json))) 
+            geoResps -= id   
+          }                          
+        }                    
     }  
   }  
 }
