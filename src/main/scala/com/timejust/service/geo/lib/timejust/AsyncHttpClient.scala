@@ -7,6 +7,7 @@ import akka.routing.Routing
 import akka.routing.Routing.Broadcast
 import com.ning.http.client._
 import com.ning.http.client.AsyncHandler._
+import com.timejust.util.Encoding
 
 object AsyncHttpClientPool {
   class HttpRequest(ar0: String, ar1: String, ar2: Map[String, Iterable[String]]) {
@@ -99,6 +100,15 @@ object AsyncHttpClientPool {
                      // }
     }
     
+    def getCharacterSet(contentType: String) = {
+      try {
+        contentType.split("charset=")(1)        
+      } catch {
+        case _ =>
+          null
+      }      
+    }
+    
     def receive = {
       case Get(id, url, params) =>
         val f = client.prepareGet(url).setQueryParameters(toQueryParameters(params)).
@@ -171,8 +181,14 @@ object AsyncHttpClientPool {
           })
           
           val res = f.get()
+          val charset = getCharacterSet(res.getContentType())
+          var response = res.getResponseBody()
+          if (charset != null) {
+            response = Encoding.encode(res.getResponseBody(), charset)
+          }
+            
           httpResps ::= new HttpResponse(x.id, res.getStatusCode(), 
-            res.getStatusText(), res.getResponseBody(), null)
+            res.getStatusText(), response/*res.getResponseBody()*/, null)
         })
         
         self reply Complete(id, httpResps)

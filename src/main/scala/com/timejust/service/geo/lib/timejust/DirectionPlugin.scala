@@ -74,13 +74,24 @@ object DirectionPlugin {
   val modeDriving = "driving"
   val modeTrain = "train"
   val modeBus = "bus"  
-
+  val baseDeparture = "departure"
+  val baseArrival = "arrival"
+  
   abstract class DirPluggableActor extends PluggableActor {  
     def getModeTrain(): String = { modeTrain }
     def getModeBus(): String = { modeBus }
     def getModeDriving(): String = { modeDriving }
     def getModeDefault(): String = { modeTrain }
+    def getDeparture(): String = { baseDeparture }
+    def getArrival(): String = { baseArrival }
+    def getBaseDefault(): String = { baseDeparture }
 
+    def getBase(base: String): String = {
+      if (base == baseArrival) { getArrival() }
+      else if (base == baseDeparture) { getDeparture() }
+      else { getBaseDefault() }
+    }
+    
     def getDirMode(mode: String): String = {
       if (mode == modeTrain) { getModeTrain() }
       else if (mode == modeBus) { getModeBus() }

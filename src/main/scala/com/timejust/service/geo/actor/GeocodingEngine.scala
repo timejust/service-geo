@@ -126,7 +126,7 @@ object GeocodingEngine {
             if (loc != null) {
               latlng = loc.latitude + "," + loc.longitude
               country = loc.country
-              println(loc.city)
+              // println(loc.city)
             }
                                 
             if (googleGeo == true) {        
@@ -170,8 +170,7 @@ object GeocodingEngine {
           })
           
           val json = ("status" -> "ok") ~ ("results" -> results)
-          get.OK(new String(
-            compact(JsonAST.render(json)).getBytes("ISO-8859-1"), "UTF-8"))
+          get.OK(compact(JsonAST.render(json)))
         } 
         
       case Geocoding.Response(id, resps) =>      
@@ -193,20 +192,17 @@ object GeocodingEngine {
             gcRes = resps.get(x.id).orNull
             if (gcRes != null) {
               x.status = if (gcRes.success) { "ok" } else { "google geocode error" }
-              x.res = gcRes.results
+              x.res = gcRes.results        
             } 
             results ::= x.toJObject
           })         
         }
                      
         if (geoApi != null) {
-          geoApi.method -= reqGoogleGeocoding               
-          
+          geoApi.method -= reqGoogleGeocoding                         
           if (geoApi.request != null && geoApi.method == 0) {
             val json = ("status" -> status) ~ ("results" -> results)
-            geoApi.request.OK(
-              new String(
-                compact(JsonAST.render(json)).getBytes("ISO-8859-1"), "UTF-8")) 
+            geoApi.request.OK(compact(JsonAST.render(json)))
             geoResps -= id   
           }          
         }   
@@ -240,8 +236,7 @@ object GeocodingEngine {
           geoApi.method -= reqGooglePlace          
           if (geoApi.request != null && geoApi.method == 0) {
             val json = ("status" -> status) ~ ("results" -> results)          
-            geoApi.request.OK(new String(
-              compact(JsonAST.render(json)).getBytes("ISO-8859-1"), "UTF-8"))
+            geoApi.request.OK(compact(JsonAST.render(json)))
             geoResps -= id   
           }                          
         }                    

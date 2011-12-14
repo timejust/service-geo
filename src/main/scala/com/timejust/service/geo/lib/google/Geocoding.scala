@@ -102,7 +102,7 @@ object Geocoding {
               false
             } else {                 
               val rs = 
-                json("results").asInstanceOf[List[Map[String, String]]]
+                json("results").asInstanceOf[List[Map[String, String]]]                
               rs.foreach({r=>output = output ::: List(r("formatted_address"))})
               true
             }

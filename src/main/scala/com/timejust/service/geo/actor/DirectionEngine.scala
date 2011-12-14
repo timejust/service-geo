@@ -33,7 +33,7 @@ object DirectionEngine {
   * and transportation model which has be used.
   */
   case class DirReq(id: String, origin: String, destination: String, 
-    time: String, mode: String, plugin: String = "locomote");
+    time: String, mode: String, base: String, plugin: String = "locomote");
     
   class DirectionApi(arg0: String, arg1: RequestMethod) {
     val id = arg0
@@ -176,7 +176,7 @@ object DirectionEngine {
           } else {    
             val params = Map[String, String]("key" -> "TSFEkeeXKW0DSBjA9npa", 
               "origin" -> x.origin, "destination" -> x.destination, 
-              "time" -> x.time, "mode" -> x.mode)
+              "time" -> x.time, "mode" -> x.mode, "base" -> x.base)
             
             var reqsList = reqsMap.get(plugin).orNull
             if (reqsList == null) {              

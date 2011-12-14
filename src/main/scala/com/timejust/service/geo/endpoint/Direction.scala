@@ -62,7 +62,7 @@ class Direction extends Actor with Endpoint {
  * - Single request with address
  *  http://service.timejust.com/v1/geo/direction?
  *    id=1&origin=8 rue cauchy&destination=26 rue de longchamp&
- *    time=13121221212&mode={train,bus,driving}
+ *    time=13121221212&mode={train,bus,driving}&base={arrival,departure}
  *
  * - Single request with geo position
  *  http://service.timejust.com/v1/geo/direction?
@@ -97,6 +97,7 @@ class DirectionActor extends Actor {
       var dirReqList = List[DirReq]()
       var badRequest = ("status" -> "bad_request") ~ ("results" -> "")
       var mode = modeDriving
+      var base = baseDeparture
       
       if (post.request.getContentLength <= 0) {
         post.OK(Printer.compact(JsonAST.render(badRequest)))
@@ -110,8 +111,10 @@ class DirectionActor extends Actor {
             json.reverse.foreach(x => {
               mode = if (x.get("mode").orNull == null) { 
                   modeDriving } else { x("mode") }
+              base = if (x.get("base").orNull == null) { 
+                  baseDeparture } else { x("base") }
               val dirReq = DirReq(
-                  x("id"), x("origin"), x("destination"), x("time"), mode)
+                  x("id"), x("origin"), x("destination"), x("time"), mode, base)
               if (dirReq != null) {
                 dirReqList ::= dirReq
               }
@@ -139,6 +142,7 @@ class DirectionActor extends Actor {
       val destination = get.request.getParameter("destination")
       val time = get.request.getParameter("time")
       var mode = get.request.getParameter("mode")
+      var base = get.request.getParameter("base")
       var dirReqList = List[DirReq]()
       var badRequest = ("status" -> "bad_request") ~ ("results" -> "")
       
@@ -148,9 +152,11 @@ class DirectionActor extends Actor {
       } else {
         // If mode param is not given, we just assume mode is driving
         if (mode == null)
-          mode = modeDriving
+          mode = modeDriving          
+        if (base == null)
+          base = baseDeparture
           
-        dirReqList ::= DirReq(id, origin, destination, time, mode)
+        dirReqList ::= DirReq(id, origin, destination, time, mode, base)
       }
       
       if (dirReqList.size > 0) {

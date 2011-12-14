@@ -59,7 +59,10 @@ object Locomote {
     override def getModeBus(): String = { "bus" }
     override def getModeDriving(): String = { "car" }
     override def getModeDefault(): String = { "railway" }
-  
+    override def getArrival(): String = { "ARRIVAL" }
+    override def getDeparture(): String = { "DEPARTURE" }
+    override def getBaseDefault(): String = { "DEPARTURE" }
+    
     def blankIfEmpty(s: Any): String = {
       if (s == null) { "" } else { s.asInstanceOf[String] }
     }
@@ -215,7 +218,7 @@ object Locomote {
             "time" -> List[String](unixToDateString(params("time"))),
             "area" -> List[String]("paris"),
             "means" -> List[String](getDirMode(params("mode"))),
-            "lead" -> List[String]("ARRIVAL")
+            "lead" -> List[String](getBase(params("base")))
           )
             
           val req = new HttpRequest(x.id, apiUrl, rparams)
