@@ -12,6 +12,7 @@ import com.ning.http.client._
 import com.ning.http.client.AsyncHandler._
 import com.timejust.service.geo.lib.timejust._
 import com.timejust.service.geo.lib.timejust.AsyncHttpClientPool._
+import com.timejust.service.geo.actor.GeocodingEngine._
 import net.liftweb.json._
 import net.liftweb.json.JsonDSL._
 
@@ -21,7 +22,8 @@ import net.liftweb.json.JsonDSL._
 object Geocoding { 
   case class Geocode(id: String, address: String, latlng: String, bounds: String = "", 
     sensor: Boolean = false, region: String = "", language: String = "")
-  case class GeocodeResult(id: String, success: Boolean, results: List[String])
+  class GeocodedInfo(address: String, lat: Double, lng: Double) extends GeocodingInfo(address, lat, lng)
+  case class GeocodeResult(id: String, success: Boolean, results: List[GeocodedInfo])
   
   case class Request(id: String, reply: ActorRef, reqs: List[Geocode])  
   case class Response(id: String, resps: Map[String, GeocodeResult])
@@ -90,7 +92,7 @@ object Geocoding {
         var results = Map[String, GeocodeResult]()
         
         resps.foreach({x=>
-          var output = List[String]()           
+          var output = List[GeocodedInfo]()           
           success = if (x.code == 200) {
             val json = parse(x.content).values.asInstanceOf[Map[String, String]]
             val status = json("status")            
@@ -102,8 +104,14 @@ object Geocoding {
               false
             } else {                 
               val rs = 
-                json("results").asInstanceOf[List[Map[String, String]]]                
-              rs.foreach({r=>output = output ::: List(r("formatted_address"))})
+                json("results").asInstanceOf[List[Map[String, _]]]                
+              rs.foreach({r=>
+                val geometry = 
+                  r("geometry").asInstanceOf[Map[String, Map[String, Double]]]                
+                output = output ::: List(new GeocodedInfo(
+                  r.asInstanceOf[Map[String, String]]("formatted_address"), 
+                  geometry("location")("lat"), geometry("location")("lng")))
+              })
               true
             }
           } else { false }

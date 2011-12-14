@@ -33,14 +33,18 @@ object GeocodingEngine {
    * to map
    */
   case class GeoReq(id: String, geo: String, src: String)
+  case class GeocodingInfo(address: String, lat: Double, lng: Double)
   
-  class GeoRes(arg0: String, arg1: String, arg2: List[String]) {    
+  class GeoRes(arg0: String, arg1: String, arg2: List[GeocodingInfo]) {    
     val id = arg0
     var status = arg1
     var res = arg2
     
     def toJObject = {
-      (id -> (("status" -> status) ~ ("addresses" -> res)))      
+      (id -> (("status" -> status) ~ 
+        ("results" -> res.map({x=>
+          ("address" -> x.address) ~ ("location" -> 
+            ("lat" -> x.lat) ~ ("lng" -> x.lng))}))))      
     }
   }
 
@@ -147,7 +151,8 @@ object GeocodingEngine {
             }                            
           }      
                     
-          geoPreResp ::= new GeoRes(x.id, status, List[String](geo))    
+          geoPreResp ::= new GeoRes(
+            x.id, status, List[GeocodingInfo](GeocodingInfo(geo, 0.0, 0.0)))    
         })      
                            
         if ((method & reqGoogleGeocoding) > 0 || (method & reqGooglePlace) > 0) {

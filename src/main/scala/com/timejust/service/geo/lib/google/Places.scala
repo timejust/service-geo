@@ -12,6 +12,7 @@ import com.ning.http.client._
 import com.ning.http.client.AsyncHandler._
 import com.timejust.service.geo.lib.timejust._
 import com.timejust.service.geo.lib.timejust.AsyncHttpClientPool._
+import com.timejust.service.geo.actor.GeocodingEngine._
 import net.liftweb.json._
 import net.liftweb.json.JsonDSL._
 
@@ -21,8 +22,9 @@ import net.liftweb.json.JsonDSL._
 object Places {  
   case class Place(id: String, key: String, location: String, radius: String, 
     name: String = "", sensor: Boolean = false, keyword: String = "", 
-    language: String = "", types: String = "")    
-  case class PlaceResult(id: String, success: Boolean, results: List[String])  
+    language: String = "", types: String = "")   
+  class PlacedInfo(address: String, lat: Double, lng: Double) extends GeocodingInfo(address, lat, lng)
+  case class PlaceResult(id: String, success: Boolean, results: List[PlacedInfo])  
   
   case class Request(id: String, reply: ActorRef, reqs: List[Place])  
   case class Response(id: String, resps: Map[String, PlaceResult])
@@ -96,7 +98,7 @@ object Places {
         var results = Map[String, PlaceResult]()
         
         resps.foreach({x=>
-          var output = List[String]()           
+          var output = List[PlacedInfo]()           
           success = if (x.code == 200) {
             val json = parse(x.content).values.asInstanceOf[Map[String, String]]
             val status = json("status")            
@@ -108,8 +110,14 @@ object Places {
               false
             } else {                 
               val rs = 
-                json("results").asInstanceOf[List[Map[String, String]]]
-              rs.foreach({r=>output ::= r("vicinity")})
+                json("results").asInstanceOf[List[Map[String, _]]]
+              rs.foreach({r=>
+                val geometry = 
+                  r("geometry").asInstanceOf[Map[String, Map[String, Double]]]
+                output ::= new PlacedInfo(
+                  r.asInstanceOf[Map[String, String]]("vicinity"),
+                  geometry("location")("lat"), geometry("location")("lng")) 
+                })
               true
             }
           } else { false }
