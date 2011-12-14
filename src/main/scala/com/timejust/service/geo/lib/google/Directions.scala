@@ -48,15 +48,15 @@ object Directions {
       val distance = step("distance").asInstanceOf[Map[String, BigInt]]
       val duration = step("duration").asInstanceOf[Map[String, BigInt]]
       
-      // Google directions service always return directions for driving.
+      // Google directions service always return directions for driving.     
       Direction(toSchedule("", step("start_location")), 
-        toSchedule("", step("end_location")), "car", "", "", "", "", "", 
-        distance("value").intValue(), duration("value").intValue(), 
-        step("html_instructions").asInstanceOf[String], "", "", "")
+        toSchedule("", step("end_location")), "driving", "", "", "", 
+        distance("value").intValue(), 
+        step("html_instructions").asInstanceOf[String])      
     }
     
-    def toSubsets(legs: List[Map[String, _]]) = {      
-      var subsets = List[TripSubset]() 
+    def toSteps(legs: List[Map[String, _]]) = {      
+      var steps = List[LocalSteps]() 
       legs.foreach(x=>{
         var directions = List[Direction]()
         x("steps").asInstanceOf[List[Map[String, _]]].foreach(s=>{
@@ -64,53 +64,31 @@ object Directions {
         })     
         
         val duration = x("duration").asInstanceOf[Map[String, BigInt]]   
-        subsets ::= TripSubset(
+        steps ::= new LocalSteps(
           toSchedule(x("start_address"), x("start_location")), 
           toSchedule(x("end_address"), x("end_location")),
-          duration("value").intValue(),
-          directions)
+          "driving", directions)
       })  
-      subsets      
+      steps      
     }
     
-    def toSets(route: Map[String, _]) = {
+    def toTrip(route: Map[String, _]) = {
       var departure: Schedule = null
       var arrival: Schedule = null
-      var duration: Int = 0
-      val subsets = toSubsets(route("legs").asInstanceOf[List[Map[String, _]]])
+      val steps = toSteps(route("legs").asInstanceOf[List[Map[String, _]]])
+      var duration = 0
       
-      subsets.foreach(x=>{
+      steps.foreach(x=>{
         if (duration == 0) {
           departure = x.departure
-        }
-        
+          duration += 1
+        }        
         // Accumulate the duration of direction
-        duration += x.duration
-        arrival = x.arrival;          
-      })
-      
-      List[TripSet](TripSet(departure, arrival, duration, subsets))
-    }
-    
-    def toTrips(route: Map[String, _]) = {
-      var departure: Schedule = null
-      var arrival: Schedule = null
-      var duration: Int = 0
-      val sets = toSets(route)
-
-      sets.foreach(x=>{
-        if (duration == 0) {
-          departure = x.departure
-        }
-        
-        // Accumulate the duration of direction
-        duration += x.duration
         arrival = x.arrival;        
       })
       
-      List[Trip](Trip(
-        departure, arrival, duration, 
-        route("summary").asInstanceOf[String], sets))
+      new LocalTrip(departure, arrival, route("summary").asInstanceOf[String], 
+        steps)
     }
     
     def parseResponse(json: List[Map[String, _]]) = {           
@@ -123,7 +101,7 @@ object Directions {
       // from try catch and blame on google
       // try {
       val route = json(0).asInstanceOf[Map[String, _]]
-      Travel(toTrips(route))  
+      Travel(toTrip(route), "local")  
       // } catch  {
       //  case _ =>
       //    null          
@@ -187,7 +165,7 @@ object Directions {
           
           success = if (x.code == 200) {
             val json = parse(x.content).values.asInstanceOf[Map[String, String]]
-            val status = json("status")            
+            val status = json("status")                     
             // Again check status of response content, if it is not 'OK'
             // just log the status and return fail
             if (status != "OK") {

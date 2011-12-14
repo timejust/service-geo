@@ -215,10 +215,12 @@ object DirectionEngine {
               else { "plugin error - " + name }                                    
             if (status == "ok") {
               results ::= (k -> 
-                ("status" -> status) ~ ("results" -> v.results.toJObject))  
+                ("status" -> status) ~ ("format" -> v.results.format) ~ 
+                v.results.toJObject)  
             } else {
               results ::= (k -> 
-                ("status" -> status) ~ ("results" -> ""))
+                ("status" -> status) ~ ("format" -> v.results.format) ~ 
+                ("trip" -> ""))
             }            
           })                   
         }
@@ -227,8 +229,7 @@ object DirectionEngine {
           dirApi.pop(name)                
           if (dirApi.request != null && dirApi.size == 0) {
             val json = ("status" -> status) ~ ("results" -> results)
-            dirApi.request.OK(new String(
-              compact(JsonAST.render(json)).getBytes("ISO-8859-1"), "UTF-8"))
+            dirApi.request.OK(compact(JsonAST.render(json)))
             dirResps -= id   
           }          
         }        

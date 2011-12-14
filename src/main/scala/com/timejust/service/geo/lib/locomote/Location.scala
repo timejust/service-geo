@@ -87,83 +87,61 @@ object Locomote {
         toSchedule(m("arrival").asInstanceOf[Map[String, _]]),
         blankIfEmpty(m.get("mean").orNull), blankIfEmpty(m.get("line").orNull),
         blankIfEmpty(m.get("headsign").orNull), blankIfEmpty(m.get("network").orNull),
-        blankIfEmpty(m.get("milestones").orNull), blankIfEmpty(m.get("walk").orNull), 
-        0, zeroIfEmpty(m.get("duration").orNull), "", 
-        blankIfEmpty(m.get("schedule").orNull), "", "")
+        0, "")
     }
     
-    def toSubsets(trips: List[Map[String, _]]) = {
+    def toSteps(trips: List[Map[String, _]]) = {
       var mean_ = ""
       var directions = List[Direction]()
       var departure: Schedule = null
       var arrival: Schedule = null
       var duration: Int = 0
-      var subsets = List[TripSubset]()
+      var steps = List[LocalSteps]()
       
       trips.foreach(x=>{
         val direction = toDirection(x)  
-        val mean = direction.mean        
+        val mean = direction.mean   
+             
+        if (trips.head == x) {
+          departure = direction.departure                              
+        }
         
-        if (mean_ != mean) {          
-          if (directions.length > 0) {
-            // Create new subset if direction list exists,
-            subsets ::= TripSubset(departure, arrival, duration, directions)
-          }
+        if ((mean_ != mean && trips.head != x) || (trips.last == x)) {
+          // Create new subset if direction list exists,
+          steps ::= new LocalSteps(departure, arrival, mean_, directions)
           
           // Initialize duration, direction list and departure.
-          duration = 0          
-          departure = direction.departure                    
-        }
-          
+          departure = direction.departure
+          directions = List[Direction]()                          
+        }          
         arrival = direction.arrival   
         
-        // Add the current direction to the direction list                         
+        // Add the current direction to the direction list           
         directions ::= direction        
         
         // Accumulate the duration of direction
-        duration += direction.duration
         mean_ = mean        
       })
       
-      subsets
+      steps
     }
     
-    def toSets(trips: List[Map[String, _]]) = {
+    def toTrip(trips: List[Map[String, _]]) = {
       var departure: Schedule = null
       var arrival: Schedule = null
-      var duration: Int = 0
-      val subsets = toSubsets(trips)
+      val steps = toSteps(trips)
+      var duration = 0
       
-      subsets.foreach(x=>{
+      steps.reverse.foreach(x=>{
         if (duration == 0) {
           departure = x.departure
-        }
-        
+          duration += 1
+        }        
         // Accumulate the duration of direction
-        duration += x.duration
-        arrival = x.arrival;          
+        arrival = x.arrival;   
       })
       
-      List[TripSet](TripSet(departure, arrival, duration, subsets))
-    }
-    
-    def toTrips(trips: List[Map[String, _]]) = {
-      var departure: Schedule = null
-      var arrival: Schedule = null
-      var duration: Int = 0
-      val sets = toSets(trips)
-      
-      sets.foreach(x=>{
-        if (duration == 0) {
-          departure = x.departure
-        }
-        
-        // Accumulate the duration of direction
-        duration += x.duration
-        arrival = x.arrival;        
-      })
-      
-      List[Trip](Trip(departure, arrival, duration, "", sets))
+      new LocalTrip(departure, arrival, "", steps)
     }
     
     def parseResponse(json: Map[String, String]) = {       
@@ -174,7 +152,7 @@ object Locomote {
       // Nevertheless, if something happens, let's blame on "locomote" :)
       try {
         val reps = json("trips").asInstanceOf[List[Map[String, _]]]
-        Travel(toTrips(reps))
+        Travel(toTrip(reps), "local")
       } catch  {
         case _ =>
           null          

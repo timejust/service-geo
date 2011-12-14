@@ -188,7 +188,7 @@ object AsyncHttpClientPool {
           }
             
           httpResps ::= new HttpResponse(x.id, res.getStatusCode(), 
-            res.getStatusText(), response/*res.getResponseBody()*/, null)
+            res.getStatusText(), response, null)
         })
         
         self reply Complete(id, httpResps)

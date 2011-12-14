@@ -10,64 +10,72 @@ object DirectionPlugin {
   // logitude of place where schedule happens
   case class Schedule(time: String, name: String, lat: Double, long: Double)
   
-  case class Direction(departure: Schedule, arrival: Schedule, mean: String, 
-    line: String, headsign: String, network: String, milestones: String,
-    walk: String, distance: Int, duration: Int, text_direction: String,
-    schedule: String, availability: String, booking_number: String) {
+  case class Trip(departure: Schedule, arrival: Schedule, steps: List[Step]) {
     def toJObject = {
-      ("mean" -> mean) ~ ("line" -> line) ~ ("headsign" -> headsign) ~ 
-      ("network" -> network) ~ ("departure_time" -> departure.time) ~ 
-      ("departure_lon" -> departure.long) ~ ("departure_lat" -> departure.lat) ~ 
-      ("departure_name" -> departure.name) ~ ("arrival_time" -> arrival.time) ~ 
-      ("arrival_lon" -> arrival.long) ~ ("arrival_lat" -> arrival.lat) ~ 
-      ("arrival_name" -> arrival.name) ~ ("milestones" -> milestones) ~ 
-      ("walk" -> walk) ~ ("distance" -> distance) ~ 
-      ("duration" -> duration) ~ ("text_direction" -> text_direction) ~ 
-      ("schedule" -> schedule) ~ ("availability" -> availability) ~ 
-      ("booking_number" -> booking_number)        
+      ("trip") -> 
+        ("dep_time" -> departure.time) ~ ("dep_lon" -> departure.long) ~ 
+        ("dep_lat" -> departure.lat) ~ ("dep_name" -> departure.name) ~ 
+        ("arr_time" -> arrival.time) ~ 
+        ("arr_lon" -> arrival.long) ~ ("arr_lat" -> arrival.lat) ~ 
+        ("arr_name" -> arrival.name) ~ 
+        ("steps" -> steps.reverse.map({x=>x.toJObject}))
     }
   }
   
-  // Subset is a collection of directions by transporation mean
-  case class TripSubset(departure: Schedule, arrival: Schedule, duration: Int,
-    directions: List[Direction]) {
+  class LocalTrip(departure: Schedule, arrival: Schedule, summary: String,
+    steps: List[Step]) extends Trip(departure, arrival, steps) {
+    val summary_ = summary
+    override def toJObject = {
+      ("trip") -> 
+        ("dep_time" -> departure.time) ~ ("dep_lon" -> departure.long) ~ 
+        ("dep_lat" -> departure.lat) ~ ("dep_name" -> departure.name) ~ 
+        ("arr_time" -> arrival.time) ~ 
+        ("arr_lon" -> arrival.long) ~ ("arr_lat" -> arrival.lat) ~ 
+        ("arr_name" -> arrival.name) ~ ("summary" -> summary_) ~
+        ("steps" -> steps.reverse.map({x=>x.toJObject}))
+    }      
+  }
+  
+  case class Step(departure: Schedule, arrival: Schedule, mean: String) {
     def toJObject = {
-      ("departure_time" -> departure.time) ~ ("departure_lon" -> departure.long) ~ 
-      ("departure_lat" -> departure.lat) ~ ("departure_name" -> departure.name) ~ 
-      ("duration" -> duration) ~ ("arrival_time" -> arrival.time) ~ 
-      ("arrival_lon" -> arrival.long) ~ ("arrival_lat" -> arrival.lat) ~ 
-      ("arrival_name" -> arrival.name) ~ ("directions" -> directions.map({x=>x.toJObject}))
+      ("mean" -> mean) ~ ("dep_time" -> departure.time) ~ 
+      ("dep_lon" -> departure.long) ~ ("dep_lat" -> departure.lat) ~ 
+      ("dep_name" -> departure.name) ~ 
+      ("arr_time" -> arrival.time) ~ ("arr_lon" -> arrival.long) ~ 
+      ("arr_lat" -> arrival.lat) ~ ("arr_name" -> arrival.name)      
     }
   }
   
-  // Set is also a collection of directions but it is bigger element for UI
-  case class TripSet(departure: Schedule, arrival: Schedule, duration: Int,
-    subsets: List[TripSubset]) {
+  class LocalSteps(departure: Schedule, arrival: Schedule, mean: String,
+    directions: List[Direction]) extends Step(departure, arrival, mean) {
+    val directions_ = directions 
+    override def toJObject = {
+      ("mean" -> mean) ~ ("dep_time" -> departure.time) ~ 
+      ("dep_lon" -> departure.long) ~ ("dep_lat" -> departure.lat) ~ 
+      ("dep_name" -> departure.name) ~ 
+      ("arr_time" -> arrival.time) ~ ("arr_lon" -> arrival.long) ~ 
+      ("arr_lat" -> arrival.lat) ~ ("arr_name" -> arrival.name)
+      ("directions" -> directions_.reverse.map({x=>x.toJObject}))     
+    }  
+  }  
+  
+  case class Direction(departure: Schedule, arrival: Schedule, mean: String,
+    line: String, headsign: String, network: String, distance: Int, 
+    text_direction: String) {
     def toJObject = {
-      ("departure_time" -> departure.time) ~ ("departure_lon" -> departure.long) ~ 
-      ("departure_lat" -> departure.lat) ~ ("departure_name" -> departure.name) ~ 
-      ("duration" -> duration) ~ ("arrival_time" -> arrival.time) ~ 
-      ("arrival_lon" -> arrival.long) ~ ("arrival_lat" -> arrival.lat) ~ 
-      ("arrival_name" -> arrival.name) ~ ("subsets" -> subsets.map({x=>x.toJObject}))
+      ("line" -> line) ~ ("headsign" -> headsign) ~ 
+      ("network" -> network) ~ ("dep_time" -> departure.time) ~ 
+      ("dep_lon" -> departure.long) ~ ("dep_lat" -> departure.lat) ~ 
+      ("dep_name" -> departure.name) ~ ("arr_time" -> arrival.time) ~ 
+      ("arr_lon" -> arrival.long) ~ ("arr_lat" -> arrival.lat) ~ 
+      ("arr_name" -> arrival.name) ~ ("distance" -> distance) ~ 
+      ("text_direction" -> text_direction)
     }
   }
-    
-  case class Trip(departure: Schedule, arrival: Schedule, duration: Int,
-    summary: String, sets: List[TripSet]) {
-    def toJObject = {
-    ("trip") -> 
-      ("departure_time" -> departure.time) ~ ("departure_lon" -> departure.long) ~ 
-      ("departure_lat" -> departure.lat) ~ ("departure_name" -> departure.name) ~ 
-      ("duration" -> duration) ~ ("arrival_time" -> arrival.time) ~ 
-      ("arrival_lon" -> arrival.long) ~ ("arrival_lat" -> arrival.lat) ~ 
-      ("arrival_name" -> arrival.name) ~ ("summary" -> summary) ~ 
-      ("sets" -> sets.map({x=>x.toJObject}))
-    }
-  }
-    
-  case class Travel(trip: List[Trip]) {
+  
+  case class Travel(trip: LocalTrip, format: String) {
     def toJObject: JsonAST.JObject = {
-      ("travel" -> trip.map{x=>x.toJObject})
+      (trip.toJObject)
     }
   }
   
