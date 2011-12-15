@@ -102,7 +102,7 @@ class DirectionActor extends Actor {
       if (post.request.getContentLength <= 0) {
         post.OK(Printer.compact(JsonAST.render(badRequest)))
       } else {
-        var req = post.request.getReader().readLine          
+        var req = post.request.getReader().readLine 
         if (req != null) {                        
           // Parse the given json strings and convert to list of Geo
           // object format.
