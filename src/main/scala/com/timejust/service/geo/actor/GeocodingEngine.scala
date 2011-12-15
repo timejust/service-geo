@@ -122,33 +122,34 @@ object GeocodingEngine {
             } 
 
             result = if (add != null) { add.trim } else { result.trim }
-
-            val loc = GeoLocation.getLocation(x.src)
+            var loc = null
             var latlng = ""
             var country = "fr"
+            var bounds = ""
             
+            if (x.src != "") {
+              loc = GeoLocation.getLocation(x.src)
+            }  
+              
             if (loc != null) {
               latlng = loc.latitude + "," + loc.longitude
               country = loc.country
-              // println(loc.city)
-            }
-                                
-            if (googleGeo == true) {        
-              method |= reqGoogleGeocoding  
-              
-              // Use google geocoding api to recognize the given address
-              geoCodes ::= new Geocode(x.id, result, "",/*latlng,*/ 
-                (loc.latitude.toFloat - 0.3).toString + "," + 
+              bounds = (loc.latitude.toFloat - 0.3).toString + "," + 
                 (loc.longitude.toFloat - 0.3).toString + "|" +
                 (loc.latitude.toFloat + 0.3).toString + "," + 
-                (loc.longitude.toFloat + 0.3).toString, false, country)
+                (loc.longitude.toFloat + 0.3).toString
+            }
+
+            if (googleGeo == true) {        
+              method |= reqGoogleGeocoding  
+              // Use google geocoding api to recognize the given address
+              geoCodes ::= new Geocode(x.id, result, "", bounds, false, country)
             } else {
               method |= reqGooglePlace  
-              
               // Use google places search api to recognize the given 
               // place information
               places ::= new Place(x.id, googleApiKey, latlng, "50000", result)
-            }                            
+            }                                  
           }      
                     
           geoPreResp ::= new GeoRes(
