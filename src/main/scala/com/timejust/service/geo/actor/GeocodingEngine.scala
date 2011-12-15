@@ -122,7 +122,7 @@ object GeocodingEngine {
             } 
 
             result = if (add != null) { add.trim } else { result.trim }
-            var loc = null
+            var loc: GeoLocation.Location = null
             var latlng = ""
             var country = "fr"
             var bounds = ""
