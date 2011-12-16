@@ -79,7 +79,7 @@ object DirectionPlugin {
     }
   }
   
-  val modeDriving = "driving"
+  val modeDriving = "car"
   val modeTrain = "train"
   val modeBus = "bus"  
   val baseDeparture = "departure"

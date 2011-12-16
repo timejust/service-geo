@@ -99,13 +99,13 @@ object Directions {
       // we believe in google service that always returns at least key params
       // so let's just use () and if something happens, we catch exception
       // from try catch and blame on google
-      // try {
-      val route = json(0).asInstanceOf[Map[String, _]]
-      Travel(toTrip(route), "local")  
-      // } catch  {
-      //  case _ =>
-      //    null          
-      // }
+      try {
+        val route = json(0).asInstanceOf[Map[String, _]]
+        Travel(toTrip(route), "local")  
+      } catch  {
+        case _ =>
+          null          
+      }
     }
 
     /**
@@ -119,7 +119,7 @@ object Directions {
         // something happened....
         val r = reqs.asInstanceOf[List[RequestMap[String, String]]]
         
-        r.foreach({x=> 
+        r.foreach({x=>           
           val params = x.params
           // Check validaty of the given params
           if (params.get("origin").orNull == null || params.get("destination").orNull == null) {
