@@ -19,7 +19,7 @@ object Datetime {
   
   def unixToDateString(unix: Long) = {
     val c = Calendar.getInstance()
-    if (unix == null) {
+    if (unix == 0) {
       c.setTimeInMillis(System.currentTimeMillis())  
     } else {
       // If the given unix time is null, get current time stamp
