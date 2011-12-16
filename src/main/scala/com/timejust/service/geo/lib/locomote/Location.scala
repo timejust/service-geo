@@ -43,8 +43,7 @@ object Locomote {
         
     def unixToDateString(unix: String) = {
       val c = Calendar.getInstance()
-      
-      if (unix != null) {
+      if (unix == null) {
         c.setTimeInMillis(System.currentTimeMillis())  
       } else {
         // If the given unix time is null, get current time stamp
