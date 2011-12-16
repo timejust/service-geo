@@ -7,8 +7,7 @@ import com.ning.http.client.AsyncHandler._
 import com.timejust.service.geo.lib.timejust.Plugin._
 import com.timejust.service.geo.lib.timejust.DirectionPlugin._
 import com.timejust.service.geo.lib.timejust.AsyncHttpClientPool._
-import java.util.Calendar
-import java.text.SimpleDateFormat
+import com.timejust.util._
 import net.liftweb.json._
 import net.liftweb.json.JsonDSL._
 import scala.collection.immutable.HashMap._
@@ -40,19 +39,6 @@ object Locomote {
    */ 
   class DirectionActor extends DirPluggableActor {    
     implicit val formats = DefaultFormats          
-        
-    def unixToDateString(unix: String) = {
-      val c = Calendar.getInstance()
-      if (unix == null) {
-        c.setTimeInMillis(System.currentTimeMillis())  
-      } else {
-        // If the given unix time is null, get current time stamp
-        c.setTimeInMillis(unix.toLong * 1000)  
-      }          
-      
-      val sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-      sdf.format(c.getTime())      
-    }
     
     override def getModeTrain(): String = { "railway" }
     override def getModeBus(): String = { "bus" }
@@ -192,7 +178,7 @@ object Locomote {
             "departure_lon" -> List[String](origin(1)),
             "destination_lat"-> List[String](destination(0)), 
             "destination_lon" -> List[String](destination(1)),
-            "time" -> List[String](unixToDateString(params("time"))),
+            "time" -> List[String](Datetime.unixToDateString(params("time"))),
             "area" -> List[String]("paris"),
             "means" -> List[String](getDirMode(params("mode"))),
             "lead" -> List[String](getBase(params("base")))

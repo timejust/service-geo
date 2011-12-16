@@ -7,6 +7,7 @@ import com.ning.http.client.AsyncHandler._
 import com.timejust.service.geo.lib.timejust.Plugin._
 import com.timejust.service.geo.lib.timejust.DirectionPlugin._
 import com.timejust.service.geo.lib.timejust.AsyncHttpClientPool._
+import com.timejust.util._
 import net.liftweb.json._
 import net.liftweb.json.JsonDSL._
 import scala.collection.immutable.HashMap._
@@ -38,46 +39,75 @@ object Directions {
    */ 
   class DirectionsActor extends DirPluggableActor {    
     implicit val formats = DefaultFormats          
+    var timeMap = Map[String, (String, String)]()
     
     override def getModeDriving(): String = { "driving" }
     
-    def toSchedule(address: Any, loc:Any) = {
+    def toSchedule(time: String, address: Any, loc:Any) = {
       val map = loc.asInstanceOf[Map[String, Double]];
-      Schedule("", address.asInstanceOf[String], map("lat"), map("lng"))
+      Schedule(time, address.asInstanceOf[String], map("lat"), map("lng"))
     }
     
-    def toDirection(step: Map[String, _]) = {
+    def toDirection(step: Map[String, _], departureTime: Long) = {
       val distance = step("distance").asInstanceOf[Map[String, BigInt]]
       val duration = step("duration").asInstanceOf[Map[String, BigInt]]
       
       // Google directions service always return directions for driving.     
-      Direction(toSchedule("", step("start_location")), 
-        toSchedule("", step("end_location")), "driving", "", "", "", 
-        distance("value").intValue(), duration("value").intValue(),
+      Direction(toSchedule(Datetime.unixToDateString(departureTime), "",  
+        step("start_location")), toSchedule(Datetime.unixToDateString(
+          departureTime + duration("value").intValue()), "", step("end_location")), 
+        "driving", "", "", "", distance("value").intValue(), 
+        duration("value").intValue(),
         step("html_instructions").asInstanceOf[String])      
     }
     
-    def toSteps(legs: List[Map[String, _]]) = {      
-      var steps = List[LocalSteps]() 
+    def toSteps(legs: List[Map[String, _]], time: (String, String)) = {      
+      var steps = List[LocalSteps]()
+      var baseTime = time._1.toLong
+      val base = time._2
+      var departureTime: Long = 0
+      var arrivalTime: Long = 0
+      
+      if (base == "departure") {
+        departureTime = baseTime
+      } else {
+        // we need to calculate departure time
+        var duration = 0
+        legs.foreach(x=>{
+          x("steps").asInstanceOf[List[Map[String, _]]].foreach(s=>{
+            duration += s("duration").asInstanceOf[Map[String, BigInt]](
+              "value").intValue()
+          })
+        })
+        
+        departureTime = baseTime - duration        
+      }
+      
+      arrivalTime = departureTime
       legs.foreach(x=>{
         var directions = List[Direction]()
         x("steps").asInstanceOf[List[Map[String, _]]].foreach(s=>{
-          directions ::= toDirection(s)
+          val dir = toDirection(s, arrivalTime)
+          directions ::= dir
+          arrivalTime += dir.duration
         })     
         
         val duration = x("duration").asInstanceOf[Map[String, BigInt]]   
         steps ::= new LocalSteps(
-          toSchedule(x("start_address"), x("start_location")), 
-          toSchedule(x("end_address"), x("end_location")),
+          toSchedule(Datetime.unixToDateString(departureTime), 
+            x("start_address"), x("start_location")), 
+          toSchedule(Datetime.unixToDateString(arrivalTime), 
+            x("end_address"), x("end_location")),
           "driving", directions)
       })  
       steps      
     }
     
-    def toTrip(route: Map[String, _]) = {
+    def toTrip(route: Map[String, _], time: (String, String)) = {
       var departure: Schedule = null
       var arrival: Schedule = null
-      val steps = toSteps(route("legs").asInstanceOf[List[Map[String, _]]])
+      val steps = toSteps(
+          route("legs").asInstanceOf[List[Map[String, _]]], time)
       var duration = 0
       
       steps.foreach(x=>{
@@ -93,7 +123,7 @@ object Directions {
         steps)
     }
     
-    def parseResponse(json: List[Map[String, _]]) = {           
+    def parseResponse(json: List[Map[String, _]], time: (String, String)) = {           
       // Google might return several 'routes' objects but we just
       // deal with first one now
       // NOTE: To parse scala map object, we can also use .get()
@@ -103,7 +133,7 @@ object Directions {
       // from try catch and blame on google
       try {
         val route = json(0).asInstanceOf[Map[String, _]]
-        Travel(toTrip(route), "local")  
+        Travel(toTrip(route, time), "local")  
       } catch  {
         case _ =>
           null          
@@ -124,12 +154,20 @@ object Directions {
         r.foreach({x=>           
           val params = x.params
           // Check validaty of the given params
-          if (params.get("origin").orNull == null || params.get("destination").orNull == null) {
+          if (params.get("origin").orNull == null || 
+              params.get("destination").orNull == null) {
             // throw an error
             EventHandler.error(self, "either origin or destination param not exist")          
           }
                               
-          var rparams = Map[String, Iterable[String]]("origin"->List[String](params("origin")), 
+          // We need to cache the given time and base which are not required 
+          // for google direction service. Google direction service is not
+          // giving back time information so we need to calculate ourselves
+          // based on what we get from google.
+          timeMap += (x.id -> (params.getOrElse("time", ""), params.getOrElse("base", "arrival")))
+          
+          var rparams = Map[String, Iterable[String]](
+            "origin"->List[String](params("origin")), 
             "destination"->List[String](params("destination")), 
             "mode" -> List[String](getDirMode(params.getOrElse("mode", "car"))),
             "sensor" -> List[String](params.getOrElse("sensor", "false")),
@@ -160,7 +198,7 @@ object Directions {
         // Check response status code. If the code is not 200 OK,
         // just log the error and return fail.
         var success = false
-        var results = Map[String, ResponseRes[Travel]]()
+        var results = Map[String, ResponseRes[Travel]]()  
         
         resps.foreach({x=>
           var output = List[String]()  
@@ -177,7 +215,8 @@ object Directions {
               false
             } else {  
               travel = parseResponse(
-                 json("routes").asInstanceOf[List[Map[String, _]]])    
+                 json("routes").asInstanceOf[List[Map[String, _]]], 
+                 timeMap.getOrElse(x.id, null))    
               if (travel == null) {
                 EventHandler.warning(
                   this, "Google directions api returns invalid format response => \n" + 
@@ -188,6 +227,7 @@ object Directions {
             }
           } else { false }
           
+          timeMap -= x.id
           results += x.id -> new ResponseRes(x.id, success, travel)
         })
 
