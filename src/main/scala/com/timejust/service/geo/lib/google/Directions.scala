@@ -39,6 +39,8 @@ object Directions {
   class DirectionsActor extends DirPluggableActor {    
     implicit val formats = DefaultFormats          
     
+    override def getModeDriving(): String = { "driving" }
+    
     def toSchedule(address: Any, loc:Any) = {
       val map = loc.asInstanceOf[Map[String, Double]];
       Schedule("", address.asInstanceOf[String], map("lat"), map("lng"))
@@ -124,11 +126,12 @@ object Directions {
           // Check validaty of the given params
           if (params.get("origin").orNull == null || params.get("destination").orNull == null) {
             // throw an error
+            EventHandler.error(self, "either origin or destination param not exist")          
           }
                               
           var rparams = Map[String, Iterable[String]]("origin"->List[String](params("origin")), 
             "destination"->List[String](params("destination")), 
-            "mode" -> List[String](params.getOrElse("mode", "driving")),
+            "mode" -> List[String](getDirMode(params.getOrElse("mode", "car"))),
             "sensor" -> List[String](params.getOrElse("sensor", "false")),
             "alternatives"-> List[String](params.getOrElse("alternatives", "false")), 
             "units" -> List[String](params.getOrElse("units", "metric"))

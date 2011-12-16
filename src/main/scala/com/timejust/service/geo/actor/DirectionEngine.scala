@@ -39,6 +39,7 @@ object DirectionEngine {
     val id = arg0
     val request = arg1
     var plugins = Set[String]()
+    var results = List[(String, JsonAST.JObject)]()
     
     def push(plugin: String) = {
       plugins += plugin
@@ -200,6 +201,7 @@ object DirectionEngine {
         
       case PluginResponse(id, name, resps) =>
         val dirApi: DirectionApi = dirResps.get(id).orNull
+        var dirRespList = dirApi.results
         var results = List[(String, JsonAST.JObject)]()
         var status = "ok"
           
@@ -222,16 +224,20 @@ object DirectionEngine {
                 ("status" -> status) ~ ("format" -> v.results.format) ~ 
                 ("trip" -> ""))
             }            
-          })                   
+          })                      
+          dirRespList = dirRespList ::: results       
         }
         
         if (dirApi != null) {
-          dirApi.pop(name)                
+          dirApi.pop(name)   
           if (dirApi.request != null && dirApi.size == 0) {
-            val json = ("status" -> status) ~ ("results" -> results)
+            val json = ("status" -> status) ~ ("results" -> dirRespList)
             dirApi.request.OK(compact(JsonAST.render(json)))
             dirResps -= id   
-          }          
+          } else {
+            // if we don't send back results yet save them for the future
+            dirApi.results = dirRespList
+          }         
         }        
     }
   }
