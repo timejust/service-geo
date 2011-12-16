@@ -61,7 +61,7 @@ object DirectionPlugin {
   
   case class Direction(departure: Schedule, arrival: Schedule, mean: String,
     line: String, headsign: String, network: String, distance: Int, 
-    text_direction: String) {
+    duration: Int, text_direction: String) {
     def toJObject = {
       ("line" -> line) ~ ("headsign" -> headsign) ~ 
       ("network" -> network) ~ ("dep_time" -> departure.time) ~ 
@@ -69,7 +69,7 @@ object DirectionPlugin {
       ("dep_name" -> departure.name) ~ ("arr_time" -> arrival.time) ~ 
       ("arr_lon" -> arrival.long) ~ ("arr_lat" -> arrival.lat) ~ 
       ("arr_name" -> arrival.name) ~ ("distance" -> distance) ~ 
-      ("text_direction" -> text_direction)
+      ("duration" -> duration) ~ ("text_direction" -> text_direction)
     }
   }
   

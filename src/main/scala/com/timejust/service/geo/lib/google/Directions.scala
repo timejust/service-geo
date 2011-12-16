@@ -53,7 +53,7 @@ object Directions {
       // Google directions service always return directions for driving.     
       Direction(toSchedule("", step("start_location")), 
         toSchedule("", step("end_location")), "driving", "", "", "", 
-        distance("value").intValue(), 
+        distance("value").intValue(), duration("value").intValue(),
         step("html_instructions").asInstanceOf[String])      
     }
     

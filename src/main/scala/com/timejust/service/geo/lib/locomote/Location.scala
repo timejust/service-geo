@@ -47,7 +47,7 @@ object Locomote {
         c.setTimeInMillis(System.currentTimeMillis())  
       } else {
         // If the given unix time is null, get current time stamp
-        c.setTimeInMillis(unix.toLong)  
+        c.setTimeInMillis(unix.toLong * 1000)  
       }          
       
       val sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
@@ -86,7 +86,7 @@ object Locomote {
         toSchedule(m("arrival").asInstanceOf[Map[String, _]]),
         blankIfEmpty(m.get("mean").orNull), blankIfEmpty(m.get("line").orNull),
         blankIfEmpty(m.get("headsign").orNull), blankIfEmpty(m.get("network").orNull),
-        0, "")
+        0, 0, "")
     }
     
     def toSteps(trips: List[Map[String, _]]) = {
