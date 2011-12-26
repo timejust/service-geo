@@ -92,6 +92,13 @@ object Locomote {
         }
         
         if ((mean_ != mean && trips.head != x) || (trips.last == x)) {
+          // If there is only one item exist, set current arrival and 
+          // direction item for final arrival information and direction list.
+          if (arrival == null) {
+            arrival = direction.arrival
+            directions ::= direction
+          }
+          
           // Create new subset if direction list exists,
           steps ::= new LocalSteps(departure, arrival, mean_, directions)
           
@@ -198,7 +205,7 @@ object Locomote {
         // Check response status code. If the code is not 200 OK,
         // just log the error and return fail.
         var success = false
-        var results = Map[String, ResponseRes[Travel]]()
+        var results = Map[String, ResponseRes[Travel]]()        
         
         resps.foreach({x=>
           var output = List[String]()  
@@ -216,7 +223,8 @@ object Locomote {
               false
             } else {  
               travel = parseResponse(
-                 json("directions").asInstanceOf[Map[String, String]])    
+                 json("directions").asInstanceOf[Map[String, String]])   
+              println(travel) 
               if (travel == null) {
                 EventHandler.warning(
                   this, "Locomote api returns invalid format response => \n" + 
@@ -248,7 +256,7 @@ object Locomote {
     /** 
      * Linking up our actors with this http client as to supervise them 
      */
-    // override def preStart = actors foreach { self.startLink(_) }
+    override def preStart = {} /* actors foreach { self.startLink(_) } */
 
     /**
      * When we are stopped, stop our team of  and our router
