@@ -48,17 +48,42 @@ object Directions {
       Schedule(time, address.asInstanceOf[String], map("lat"), map("lng"))
     }
     
+    def sanitize(html: String) = {
+      var strArray: Array[String] = html.split("<");
+      var sanitized = ""
+      var tok: Array[String] = Array();
+      var text = "";
+      
+      strArray.foreach(x=>{
+        // If the given string started with '<' and ended with '>', we assume
+        // this string is html string.
+        tok = x.split(">");
+        if (tok.length > 1 && !tok(1).contains(">")) {
+          text = tok(1);          
+        } else if (!x.contains(">")) {
+          text = x;          
+        }         
+        if (x.contains("div")) {
+          text = " " + text;
+        }
+        sanitized += text;
+        text = "";
+      })      
+      sanitized
+    }
+    
     def toDirection(step: Map[String, _], departureTime: Long) = {
       val distance = step("distance").asInstanceOf[Map[String, BigInt]]
-      val duration = step("duration").asInstanceOf[Map[String, BigInt]]
-      
-      // Google directions service always return directions for driving.     
+      val duration = step("duration").asInstanceOf[Map[String, BigInt]]      
+      // Google directions service always return directions for driving. 
+      // For html_instructions, it sometimes comes with html tag. Use 
+      // xml.XML.loadString to strip html tags.    
       Direction(toSchedule(Datetime.unixToDateString(departureTime), "",  
         step("start_location")), toSchedule(Datetime.unixToDateString(
           departureTime + duration("value").intValue()), "", step("end_location")), 
         "driving", "", "", "", distance("value").intValue(), 
         duration("value").intValue(),
-        step("html_instructions").asInstanceOf[String])      
+        sanitize(step("html_instructions").asInstanceOf[String]))      
     }
     
     def toSteps(legs: List[Map[String, _]], time: (String, String)) = {      
@@ -222,8 +247,9 @@ object Directions {
                   this, "Google directions api returns invalid format response => \n" + 
                   x.content)
                 false
-              }                           
-              true
+              } else {
+                true  
+              }                                       
             }
           } else { false }
           

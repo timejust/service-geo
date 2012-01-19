@@ -221,7 +221,7 @@ object DirectionEngine {
                 v.results.toJObject)  
             } else {
               results ::= (k -> 
-                ("status" -> status) ~ ("format" -> v.results.format) ~ 
+                ("status" -> status) ~ ("format" -> "") ~ 
                 ("trip" -> ""))
             }            
           })                      
