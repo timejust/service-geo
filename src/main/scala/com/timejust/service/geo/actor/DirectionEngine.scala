@@ -231,7 +231,7 @@ object DirectionEngine {
         if (dirApi != null) {
           dirApi.pop(name)   
           if (dirApi.request != null && dirApi.size == 0) {
-            val json = ("status" -> status) ~ ("results" -> dirRespList)
+            val json = ("status" -> "ok") ~ ("results" -> dirRespList)
             dirApi.request.OK(compact(JsonAST.render(json)))
             dirResps -= id   
           } else {
