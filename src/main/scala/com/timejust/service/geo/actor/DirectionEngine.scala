@@ -156,7 +156,7 @@ object DirectionEngine {
         var reqsMap = Map[PluginRef, List[RequestMap[String, String]]]()
         var plugin: PluginRef = null
         var dirApi = new DirectionApi(reqId, request)
-        
+         
         dirList.foreach(x => {          
           status = "ok"          
           plugin = null
@@ -167,8 +167,7 @@ object DirectionEngine {
             plugin = directionPlugins.getPlugin("google.directions")            
           }
           // If google direction plugin is not available, let the framework
-          // decide which plugin to use.
-          
+          // decide which plugin to use.          
           if (plugin == null)
             plugin = directionPlugins.getPlugin(x.origin, x.destination)
             
@@ -178,18 +177,19 @@ object DirectionEngine {
             val params = Map[String, String]("key" -> "TSFEkeeXKW0DSBjA9npa", 
               "origin" -> x.origin, "destination" -> x.destination, 
               "time" -> x.time, "mode" -> x.mode, "base" -> x.base)
-            
+             
             var reqsList = reqsMap.get(plugin).orNull
             if (reqsList == null) {              
-              reqsList = List(RequestMap[String, String](x.id, params))                  
+              reqsList = List(RequestMap[String, String](x.id, params))                                
               dirApi.push(plugin.name)   
+              println(plugin.name)
             } else {              
-              reqsList ::= RequestMap[String, String](x.id, params)
+              reqsList ::= RequestMap[String, String](x.id, params) 
             }                
             reqsMap += (plugin -> reqsList)            
-          }
+          }         
         })   
-            
+                   
         if (reqsMap.size > 0) {
           dirResps += reqId -> dirApi
         }

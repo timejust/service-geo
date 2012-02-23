@@ -18,7 +18,9 @@ class ServiceProject(info: ProjectInfo) extends DefaultWebProject(info) with Akk
     "net.liftweb" % "lift-json_2.9.1" % "2.4-M5" % "compile",
     "ch.qos.logback" % "logback-classic" % "0.9.28" % "runtime",
     "com.ning" % "async-http-client" % "1.6.4" % "compile",
-    "mysql" % "mysql-connector-java" % "5.1.12" % "compile"
+    "mysql" % "mysql-connector-java" % "5.1.12" % "compile",
+    "org.scalatest" %% "scalatest" % "1.6.1" % "test",
+    "c3p0" % "c3p0" % "0.9.1.2" % "compile"
   ) ++ super.libraryDependencies        
   
   override def jettyPort = 9000

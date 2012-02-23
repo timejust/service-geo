@@ -1,4 +1,10 @@
 package com.timejust.service.geo.endpoint
+/**
+ * Recognition.scala
+ * Geo-recognition service endpoint class
+ *
+ * @author Min S. Kim (minsikzzang@gmail.com, minsik.kim@timejust.com)
+ */ 
 
 import akka.actor._
 import akka.http._

@@ -1,4 +1,11 @@
 package com.timejust.service.geo.lib.google
+/**
+ * Directiona.scala
+ * Google direction service implementation with asynchronous 
+ * http client
+ *
+ * @author Min S. Kim (minsikzzang@gmail.com, minsik.kim@timejust.com)
+ */ 
 
 import akka.actor._
 import akka.event.EventHandler

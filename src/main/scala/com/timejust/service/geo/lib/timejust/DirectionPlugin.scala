@@ -101,10 +101,22 @@ object DirectionPlugin {
     }
     
     def getDirMode(mode: String): String = {
-      if (mode == modeTrain) { getModeTrain() }
-      else if (mode == modeBus) { getModeBus() }
-      else if (mode == modeDriving) { getModeDriving() }
-      else { getModeDefault() }
+      val modes = mode.split(",")
+      var str = ""
+      var i = 0
+      
+      modes.map({m=>
+        if (m == modeTrain) { str += getModeTrain() }
+        else if (m == modeBus) { str += getModeBus() }
+        else if (m == modeDriving) { str += getModeDriving() }
+        else { str += getModeDefault() }
+        if (i < modes.length - 1) {
+          str += ","
+        }
+        i += 1
+      })
+      
+      str
     }
   }
 }

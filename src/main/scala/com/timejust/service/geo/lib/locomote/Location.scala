@@ -1,5 +1,14 @@
 package com.timejust.service.geo.lib.locomote
 
+/**
+ * Location.scala
+ *
+ * Locomote direction service implementation with asynchronous 
+ * http client and timejust plugin library
+ *
+ * @author Min S. Kim (minsikzzang@gmail.com, minsik.kim@timejust.com)
+ */ 
+
 import akka.actor._
 import akka.event.EventHandler
 import com.ning.http.client._
@@ -71,8 +80,8 @@ object Locomote {
       Direction(toSchedule(m("departure").asInstanceOf[Map[String, _]]),
         toSchedule(m("arrival").asInstanceOf[Map[String, _]]),
         blankIfEmpty(m.get("mean").orNull), blankIfEmpty(m.get("line").orNull),
-        blankIfEmpty(m.get("headsign").orNull), blankIfEmpty(m.get("network").orNull),
-        0, 0, "")
+        blankIfEmpty(m.get("headsign").orNull), 
+        blankIfEmpty(m.get("network").orNull), 0, 0, "")
     }
     
     def toSteps(trips: List[Map[String, _]]) = {
@@ -210,6 +219,8 @@ object Locomote {
         resps.foreach({x=>
           var output = List[String]()  
           var travel:Travel = null
+          // println(x.code)
+          // println(x.content)
           
           success = if (x.code == 200) {
             // println(x.content)

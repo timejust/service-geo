@@ -1,4 +1,11 @@
 package com.timejust.service.geo.lib.google
+/**
+ * Places.scala
+ * Google place service implementation with asynchronous 
+ * http client
+ *
+ * @author Min S. Kim (minsikzzang@gmail.com, minsik.kim@timejust.com)
+ */ 
 
 import akka.actor._
 import akka.config.Config._ 
