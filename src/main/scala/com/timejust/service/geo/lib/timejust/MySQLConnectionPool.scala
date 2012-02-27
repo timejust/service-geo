@@ -23,7 +23,7 @@ object MySQLConnectionPool {
     c.setJdbcUrl(connection)
     c.setUser(username)
     c.setPassword(password)
-
+    c.setIdleConnectionTestPeriod(30)
     c.setMinPoolSize(1)
     c.setAcquireIncrement(1)
     c.setMaxPoolSize(50)   
