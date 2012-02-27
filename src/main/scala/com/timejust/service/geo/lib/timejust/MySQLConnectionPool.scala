@@ -15,7 +15,7 @@ object MySQLConnectionPool {
   val username = config.getString("service-geo.geo-location-db.username", "root")
   val password = config.getString("service-geo.geo-location-db.password", "sa")  
   val encoding = config.getString("service-geo.geo-location-db.encoding", "utf8")  
-  val connection = "jdbc:mysql://" + host + "/" + db
+  val connection = "jdbc:mysql://" + host + "/" + db + "?autoReconnect=true"
     
   var cpds = {
     var c = new ComboPooledDataSource
@@ -24,6 +24,7 @@ object MySQLConnectionPool {
     c.setUser(username)
     c.setPassword(password)
 
+    c.checkoutTimeout(10000)
     c.setMinPoolSize(1)
     c.setAcquireIncrement(1)
     c.setMaxPoolSize(50)   
