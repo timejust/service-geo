@@ -24,7 +24,6 @@ object MySQLConnectionPool {
     c.setUser(username)
     c.setPassword(password)
 
-    c.checkoutTimeout(10000)
     c.setMinPoolSize(1)
     c.setAcquireIncrement(1)
     c.setMaxPoolSize(50)   
