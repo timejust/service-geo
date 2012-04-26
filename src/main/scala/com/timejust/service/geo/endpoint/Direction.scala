@@ -32,7 +32,7 @@ class Direction extends Actor with Endpoint {
   self.dispatcher = Endpoint.Dispatcher
       
   // Create the recognition actors
-  val directions = Vector.fill(8)(Actor.actorOf(new DirectionActor).start())
+  val directions = Vector.fill(4)(Actor.actorOf(new DirectionActor).start())
 
   // Wrap them with a load-balancing router
   val direction = Routing.loadBalancerActor(CyclicIterator(directions)).start()
@@ -101,6 +101,7 @@ class DirectionActor extends Actor {
 
   def receive = {    
     case post:Post =>
+      println("DirectionActor:receive => post")
       post.response.setContentType(MediaType.APPLICATION_JSON)
       post.response.setCharacterEncoding("UTF-8")
       var dirReqList = List[DirReq]()
@@ -108,7 +109,6 @@ class DirectionActor extends Actor {
       var mode = modeDriving
       var base = baseDeparture
       
-      println("DirectionActorEndpoint: " + post.request.getReader().readLine)
       if (post.request.getContentLength <= 0) {
         post.OK(Printer.compact(JsonAST.render(badRequest)))
       } else {
