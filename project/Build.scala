@@ -47,8 +47,9 @@ object Dependencies {
   import Dependency._
   
   val serviceGeo = Seq(
-    akkaActor, akkaHttp, liftJson, jettyWepapp, jettyPlus, servletApi, 
-    asyncHttpClient, mysqlConnector, c3p0, scalaTest
+    akkaActor, akkaHttp, akkaSlf4j, akkaRemote, liftJson, jettyWepapp, 
+    jettyPlus, servletApi, asyncHttpClient, mysqlConnector, c3p0, scalaTest, 
+    logback
   )
 }
 
@@ -62,6 +63,8 @@ object Dependency {
   
   val akkaActor         = "se.scalablesolutions.akka" % "akka-actor"            % V.Akka
   val akkaHttp          = "se.scalablesolutions.akka" % "akka-http"             % V.Akka
+  val akkaSlf4j         = "se.scalablesolutions.akka" % "akka-slf4j"            % V.Akka
+  val akkaRemote        = "se.scalablesolutions.akka" % "akka-remote"            % V.Akka
   val liftJson          = "net.liftweb"              %% "lift-json"             % V.Lift
   val liftMapper        = "net.liftweb"              %% "lift-mapper"           % V.Lift
   val jettyWepapp       = "org.eclipse.jetty"         % "jetty-webapp"          % V.Jetty   % "container"
@@ -74,6 +77,7 @@ object Dependency {
   val googleCalendar    = "com.google.apis"           % "google-api-services-calendar"  % "v3-rev3-1.5.0-beta"
   val casbah            = "com.mongodb.casbah"       %% "casbah"                % "2.1.5-1"
   val scalaTest         = "org.scalatest"            %% "scalatest"             % "1.7.1"   % "test"
+  val logback           = "ch.qos.logback"            % "logback-classic"       % "0.9.28"
   
   // val akkaSlf4j         = "com.typesafe.akka"         % "akka-slf4j"         % V.Akka
   // val logback           = "ch.qos.logback"    % "logback-classic"    % "1.0.0" 
