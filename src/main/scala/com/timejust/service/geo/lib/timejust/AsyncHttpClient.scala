@@ -48,6 +48,9 @@ object AsyncHttpClientPool {
      */
     var client: AsyncHttpClient = null
     
+    /*
+     * Http request timeout
+     */
     val kTimeout = 3000
     
     /**
