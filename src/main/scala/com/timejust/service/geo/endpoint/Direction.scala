@@ -71,8 +71,11 @@ class Direction extends Actor with Endpoint {
  *    time=13121221212&mode={train,bus,driving}&base={arrival,departure}
  *
  * - Single request with geo position
- *  http://service.timejust.com/v1/geo/direction?
- *    id=1&origin=2.3458,48.8289&destination=2.3522,42118.8434&time=13121221212
+ *  curl -v -X POST -d'[{"id":"0","origin":"48.8835582,2.2568579999999656","destination":"44.8403587,-0.5994221",
+ "time":"1332140400","mode":"bus","base":"departure"},{"id":"1","origin":"48.8835582,2.2568579999999656",
+ "destination":"44.8403587,-0.5994221","time":"1332140400","mode":"train","base":"departure"},
+ {"id":"2","origin":"48.8835582,2.2568579999999656","destination":"44.8403587,-0.5994221","time":"1332140400",
+ "mode":"car","base":"departure"}]' 'http://127.0.0.1:9000/service-geo/v1/geo/direction'
  *
  * - Multiple request with address
  *  json -> 
@@ -133,7 +136,7 @@ class DirectionActor extends Actor {
           post.OK(Printer.compact(JsonAST.render(badRequest)))
         }
       }
-      
+            
       if (dirReqList.size > 0) {
         // Call geocodingActor to process geo recognition task with
         // the given geo input and request

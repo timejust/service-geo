@@ -8,6 +8,7 @@ import akka.routing.Routing.Broadcast
 import com.ning.http.client._
 import com.ning.http.client.AsyncHandler._
 import com.timejust.util.Encoding
+import java.util.concurrent.ExecutionException
 
 object AsyncHttpClientPool {
   class HttpRequest(ar0: String, ar1: String, ar2: Map[String, Iterable[String]]) {
@@ -47,10 +48,15 @@ object AsyncHttpClientPool {
      */
     var client: AsyncHttpClient = null
     
+    val kTimeout = 3000
+    
     /**
      * Create http client before starting the actor
      */
-    override def preStart() = { client = new AsyncHttpClient }
+    override def preStart() = { 
+      client = new AsyncHttpClient(
+        new AsyncHttpClientConfig.Builder().setRequestTimeoutInMs(kTimeout).build()) 
+      }
     
     /**
      * Convet scala data structure to java ones for addQueryParameter 
@@ -116,7 +122,7 @@ object AsyncHttpClientPool {
           val builder = new Response.ResponseBuilder()
           
           def onThrowable(t: Throwable) {
-            EventHandler.error(this, t.getMessage)
+            // EventHandler.error(this, t.getMessage)
           }
     
           def onBodyPartReceived(bodyPart: HttpResponseBodyPart) = {
@@ -142,9 +148,28 @@ object AsyncHttpClientPool {
           }
         })
     
-        val res = f.get()
-        self reply Complete(id, List[HttpResponse](new HttpResponse(id, res.getStatusCode(), 
-          res.getStatusText(), res.getResponseBody(), null)))          
+        var statusCode = 200
+        var statusText = "OK"
+        var response: String = null
+        
+        try {
+          val res = f.get()
+          statusCode = res.getStatusCode()
+          statusText = res.getStatusText()            
+          val charset = getCharacterSet(res.getContentType())          
+          response = res.getResponseBody()
+          if (charset != null) {
+            response = Encoding.encode(res.getResponseBody(), charset)
+          }            
+        } catch {
+          case e: ExecutionException =>
+            EventHandler.warning(this, e.getMessage)  
+            statusCode = 408  
+            statusText = "Request Timeout"                
+        }          
+          
+        self reply Complete(id, List[HttpResponse](new HttpResponse(id, statusCode, 
+          statusText, response, null)))          
           
       case Gets(id, reqs) => 
         var httpResps = List[HttpResponse]()    
@@ -153,8 +178,8 @@ object AsyncHttpClientPool {
             execute(new AsyncHandler[Response]() {            
             val builder = new Response.ResponseBuilder()
 
-            def onThrowable(t: Throwable) {
-              EventHandler.error(this, t.getMessage)
+            def onThrowable(t: Throwable) {              
+              // EventHandler.error(this, t.getMessage)              
             }
 
             def onBodyPartReceived(bodyPart: HttpResponseBodyPart) = {
@@ -180,15 +205,28 @@ object AsyncHttpClientPool {
             }
           })
           
-          val res = f.get()
-          val charset = getCharacterSet(res.getContentType())
-          var response = res.getResponseBody()
-          if (charset != null) {
-            response = Encoding.encode(res.getResponseBody(), charset)
-          }
+          var statusCode = 200
+          var statusText = "OK"
+          var response: String = null
+          
+          try {
+            val res = f.get()
+            statusCode = res.getStatusCode()
+            statusText = res.getStatusText()            
+            val charset = getCharacterSet(res.getContentType())          
+            response = res.getResponseBody()
+            if (charset != null) {
+              response = Encoding.encode(res.getResponseBody(), charset)
+            }            
+          } catch {
+            case e: ExecutionException =>
+              EventHandler.warning(this, e.getMessage)  
+              statusCode = 408  
+              statusText = "Request Timeout"      
+          }          
             
-          httpResps ::= new HttpResponse(x.id, res.getStatusCode(), 
-            res.getStatusText(), response, null)
+          httpResps ::= new HttpResponse(x.id, statusCode, 
+            statusText, response, null)
         })
         
         self reply Complete(id, httpResps)

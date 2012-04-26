@@ -222,6 +222,8 @@ object Directions {
           
         parents += id -> reply
          
+        println("google-direction" + httpReqs)
+         
         // Schedule http client
         client ! Gets(id, httpReqs)
       

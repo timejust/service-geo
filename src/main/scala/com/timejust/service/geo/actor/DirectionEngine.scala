@@ -170,7 +170,7 @@ object DirectionEngine {
           // decide which plugin to use.          
           if (plugin == null)
             plugin = directionPlugins.getPlugin(x.origin, x.destination)
-            
+                        
           if (plugin == null) {
             status = "missing_plugin"
           } else {    
@@ -193,7 +193,7 @@ object DirectionEngine {
         if (reqsMap.size > 0) {
           dirResps += reqId -> dirApi
         }
-        
+                
         reqsMap.foreach(x => {
           x._1.actorRef ! PluginRequest[RequestMap[String, String]](
             reqId, self, x._2)             

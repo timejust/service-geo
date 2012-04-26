@@ -205,7 +205,9 @@ object Locomote {
         });
           
         parents += id -> reply
-         
+
+        println("locomote" + httpReqs)
+        
         // Schedule http client
         client ! Gets(id, httpReqs)
       
@@ -219,9 +221,7 @@ object Locomote {
         resps.foreach({x=>
           var output = List[String]()  
           var travel:Travel = null
-          // println(x.code)
-          // println(x.content)
-          
+                    
           success = if (x.code == 200) {
             // println(x.content)
             val json = parse(x.content).values.asInstanceOf[Map[String, String]]
