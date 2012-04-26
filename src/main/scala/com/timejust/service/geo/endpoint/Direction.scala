@@ -15,6 +15,7 @@ import com.timejust.service.geo.actor._
 import com.timejust.service.geo.actor.DirectionEngine._
 import com.timejust.service.geo.lib.timejust._
 import com.timejust.service.geo.lib.timejust.DirectionPlugin._
+import com.timejust.util._
 import javax.ws.rs.core.MediaType  
 import java.net.URLDecoder
 import net.liftweb.json._
