@@ -42,7 +42,10 @@ class Direction extends Actor with Endpoint {
   def hook(uri: String): Boolean = ((uri == directionActor))
   
   // def provide(uri: String): ActorRef = Actor.actorOf[GeoRecognitionActor].start
-  def provide(uri: String): ActorRef = direction
+  def provide(uri: String): ActorRef = {
+    EventHandler.info(this, uri)  
+    direction
+  }
 
   // This is where you want to attach your endpoint hooks
   override def preStart() = {
