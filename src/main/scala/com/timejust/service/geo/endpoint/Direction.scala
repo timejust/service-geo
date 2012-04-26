@@ -108,6 +108,7 @@ class DirectionActor extends Actor {
       var mode = modeDriving
       var base = baseDeparture
       
+      println("DirectionActorEndpoint: " + post.request.getReader().readLine)
       if (post.request.getContentLength <= 0) {
         post.OK(Printer.compact(JsonAST.render(badRequest)))
       } else {
