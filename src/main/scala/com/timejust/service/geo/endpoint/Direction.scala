@@ -32,7 +32,7 @@ class Direction extends Actor with Endpoint {
   self.dispatcher = Endpoint.Dispatcher
       
   // Create the recognition actors
-  val directions = Vector.fill(4)(Actor.actorOf(new DirectionActor).start())
+  val directions = Vector.fill(8)(Actor.actorOf(new DirectionActor).start())
 
   // Wrap them with a load-balancing router
   val direction = Routing.loadBalancerActor(CyclicIterator(directions)).start()

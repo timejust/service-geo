@@ -11,9 +11,16 @@ import com.timejust.service.geo.endpoint._
 class Boot {
   val Factory = SupervisorFactory(SupervisorConfig(OneForOneStrategy(List(classOf[Exception]), 3, 100),
                                                    Supervise(Actor.actorOf[RootEndpoint], Permanent) ::
-                                                   Supervise(Actor.actorOf[Recognition], Permanent) :: 
-                                                   Supervise(Actor.actorOf[Direction], Permanent) :: 
+                                                   Supervise(Actor.actorOf[Recognition], Permanent) ::
                                                    Supervise(Actor.actorOf[IPGrabber], Permanent) :: Nil))
+
+  Factory.newInstance.start
+}
+
+class BootDirection {
+  val Factory = SupervisorFactory(SupervisorConfig(OneForOneStrategy(List(classOf[Exception]), 3, 100),
+                                                   Supervise(Actor.actorOf[RootEndpoint], Permanent) ::                                                   
+                                                   Supervise(Actor.actorOf[Direction], Permanent) ::  Nil))
 
   Factory.newInstance.start
 }
