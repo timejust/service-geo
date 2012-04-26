@@ -102,7 +102,8 @@ class DirectionActor extends Actor {
 
   def receive = {    
     case post:Post =>
-      Logger.info("DirectionActor:receive => post")
+      EventHandler.info(this, "DirectionActor:receive => post")  
+      
       post.response.setContentType(MediaType.APPLICATION_JSON)
       post.response.setCharacterEncoding("UTF-8")
       var dirReqList = List[DirReq]()
