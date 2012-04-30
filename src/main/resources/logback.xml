@@ -20,7 +20,7 @@
       <pattern>[%4p] [%d{ISO8601}] [%t] %c{1}: %m%n</pattern>
     </encoder>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-      <fileNamePattern>/var/log/service-geo/logs/akka.log.%d{yyyy-MM-dd-HH}</fileNamePattern>
+      <fileNamePattern>/var/log/service-geo/akka.log.%d{yyyy-MM-dd-HH}</fileNamePattern>
     </rollingPolicy>
   </appender>
   <logger name="akka" level="DEBUG"/>
