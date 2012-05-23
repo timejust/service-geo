@@ -140,10 +140,10 @@ object SemanticAnalysisFR {
     var regex3 = """^.*(([Pp]lace|[Rr]ue|[Bb]oulevard|[Bb]l?d|[Aa]llee|[Aa]venue).*)$""".r
     
     geo match {
-      case regex0(res0) => addr = res0
-      case regex1(res0) => addr = res0
+      case regex0(res0, res1) => addr = res0
+      case regex1(res0, res1) => addr = res0
       case regex2(res0) => addr = res0
-      case regex3(res0) => addr = res0
+      case regex3(res0, res1) => addr = res0
       case _ => addr = null
     }
     

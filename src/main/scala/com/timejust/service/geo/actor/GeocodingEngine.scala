@@ -113,6 +113,7 @@ object GeocodingEngine {
             // If syntax is ok, we do some alaysis whether it contains
             // postal address, place names, or firms.
             var googleGeo = true
+            /*
             var add = SemanticAnalysisFR.getPostalAddress(result) 
             if (add == null) {
               add = SemanticAnalysisFR.getPlaceName(result)
@@ -120,8 +121,11 @@ object GeocodingEngine {
                 googleGeo = false
               }
             } 
-
+            
             result = if (add != null) { add.trim } else { result.trim }
+            */
+            result = result.trim
+            
             var loc: GeoLocation.Location = null
             var latlng = ""
             var country = "fr"
