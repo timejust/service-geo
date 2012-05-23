@@ -215,12 +215,12 @@ object AsyncHttpClientPool {
           try {
             val res = f.get()
             statusCode = res.getStatusCode()
-            statusText = res.getStatusText()            
-            val charset = getCharacterSet(res.getContentType())          
+            statusText = res.getStatusText()                        
+            val charset = getCharacterSet(res.getContentType())                      
             response = res.getResponseBody()
             if (charset != null) {
-              response = Encoding.encode(res.getResponseBody(), charset)
-            }            
+              response = Encoding.encode(res.getResponseBody(), charset, "UTF-8")
+            } 
           } catch {
             case e: ExecutionException =>
               EventHandler.warning(this, e.getMessage)  
